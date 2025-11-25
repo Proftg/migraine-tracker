@@ -40,7 +40,7 @@ const intensityEmojis = [
 
 const commonSymptoms = [
     "Nausée", "Vomissements", "Photophobie", "Phonophobie",
-    "Aura visuelle", "Vertiges", "Fatigue", "Vision floue"
+    "Aura visuelle", "Vertiges", "Fatigue", "Vision floue", "Autre"
 ];
 
 const painLocations = [
@@ -53,6 +53,7 @@ export function CrisisMode({ onClose, onLogCrisis }: CrisisModeProps) {
     const [intensity, setIntensity] = useState(5);
     const [location, setLocation] = useState('');
     const [symptoms, setSymptoms] = useState<string[]>([]);
+    const [customSymptom, setCustomSymptom] = useState('');
     const [exactTime, setExactTime] = useState(new Date().toTimeString().slice(0, 5));
     const [endTime, setEndTime] = useState('');
     const [calculatedDuration, setCalculatedDuration] = useState<number | null>(null);
@@ -145,10 +146,17 @@ export function CrisisMode({ onClose, onLogCrisis }: CrisisModeProps) {
     };
 
     const handleFinish = () => {
+        // Add custom symptom to symptoms array if provided
+        const finalSymptoms = [...symptoms];
+        if (symptoms.includes('Autre') && customSymptom.trim()) {
+            const index = finalSymptoms.indexOf('Autre');
+            finalSymptoms[index] = `Autre: ${customSymptom.trim()}`;
+        }
+
         const crisisData: CrisisData = {
             intensity,
             location,
-            symptoms,
+            symptoms: finalSymptoms,
             exactTime,
             endTime,
             duration: calculatedDuration || undefined,
@@ -185,8 +193,8 @@ export function CrisisMode({ onClose, onLogCrisis }: CrisisModeProps) {
                                     key={level}
                                     onClick={() => setIntensity(level)}
                                     className={`p-4 rounded-lg border-2 transition-all ${intensity === level
-                                            ? 'border-primary bg-primary/10 scale-105'
-                                            : 'border-border hover:border-primary/50'
+                                        ? 'border-primary bg-primary/10 scale-105'
+                                        : 'border-border hover:border-primary/50'
                                         }`}
                                 >
                                     <div className="text-4xl mb-2">{emoji}</div>
@@ -233,6 +241,18 @@ export function CrisisMode({ onClose, onLogCrisis }: CrisisModeProps) {
                                 </Button>
                             ))}
                         </div>
+                        {symptoms.includes('Autre') && (
+                            <div className="mt-4">
+                                <label className="block text-sm font-medium mb-2">Précisez :</label>
+                                <input
+                                    type="text"
+                                    value={customSymptom}
+                                    onChange={(e) => setCustomSymptom(e.target.value)}
+                                    placeholder="Décrivez votre symptôme..."
+                                    className="w-full p-3 border rounded-lg bg-background text-foreground"
+                                />
+                            </div>
+                        )}
                         <p className="text-sm text-muted-foreground text-center">
                             Sélectionnez tous les symptômes qui s'appliquent
                         </p>
@@ -256,7 +276,7 @@ export function CrisisMode({ onClose, onLogCrisis }: CrisisModeProps) {
                                             setCalculatedDuration(duration);
                                         }
                                     }}
-                                    className="w-full p-3 text-lg border rounded-lg"
+                                    className="w-full p-3 text-lg border rounded-lg bg-background text-foreground"
                                 />
                             </div>
                             <div>
@@ -265,7 +285,7 @@ export function CrisisMode({ onClose, onLogCrisis }: CrisisModeProps) {
                                     type="time"
                                     value={endTime}
                                     onChange={(e) => handleEndTimeChange(e.target.value)}
-                                    className="w-full p-3 text-lg border rounded-lg"
+                                    className="w-full p-3 text-lg border rounded-lg bg-background text-foreground"
                                 />
                             </div>
                             {calculatedDuration !== null && (
@@ -296,37 +316,67 @@ export function CrisisMode({ onClose, onLogCrisis }: CrisisModeProps) {
                                 ))}
                             </div>
                         )}
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Nom du médicament</label>
-                                <input
-                                    type="text"
-                                    value={currentMedication.name}
-                                    onChange={(e) => setCurrentMedication({ ...currentMedication, name: e.target.value })}
-                                    placeholder="Ex: Paracétamol, Ibuprofène..."
-                                    className="w-full p-3 border rounded-lg"
-                                />
+
+                        {/* Yes/No choice - only show if no medication entered yet for this step */}
+                        {!currentMedication.name && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <Button
+                                    variant="default"
+                                    onClick={() => {
+                                        // User will enter medication details
+                                        setCurrentMedication({ ...currentMedication, name: ' ' });
+                                    }}
+                                    className="h-24 text-lg"
+                                >
+                                    💊 Oui
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        // Skip medication, go to next step
+                                        setStep(step + 1);
+                                    }}
+                                    className="h-24 text-lg"
+                                >
+                                    ❌ Non
+                                </Button>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Dosage (nombre de comprimés)</label>
-                                <input
-                                    type="number"
-                                    value={currentMedication.dosage}
-                                    onChange={(e) => setCurrentMedication({ ...currentMedication, dosage: Number(e.target.value) })}
-                                    min="1"
-                                    className="w-full p-3 border rounded-lg"
-                                />
+                        )}
+
+                        {/* Medication form - only show if user chose "Oui" */}
+                        {currentMedication.name && (
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Nom du médicament</label>
+                                    <input
+                                        type="text"
+                                        value={currentMedication.name.trim()}
+                                        onChange={(e) => setCurrentMedication({ ...currentMedication, name: e.target.value })}
+                                        placeholder="Ex: Paracétamol, Ibuprofène..."
+                                        className="w-full p-3 border rounded-lg bg-background text-foreground"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Dosage (nombre de comprimés)</label>
+                                    <input
+                                        type="number"
+                                        value={currentMedication.dosage}
+                                        onChange={(e) => setCurrentMedication({ ...currentMedication, dosage: Number(e.target.value) })}
+                                        min="1"
+                                        className="w-full p-3 border rounded-lg bg-background text-foreground"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Heure de prise</label>
+                                    <input
+                                        type="time"
+                                        value={currentMedication.timeTaken}
+                                        onChange={(e) => setCurrentMedication({ ...currentMedication, timeTaken: e.target.value })}
+                                        className="w-full p-3 border rounded-lg bg-background text-foreground"
+                                    />
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Heure de prise</label>
-                                <input
-                                    type="time"
-                                    value={currentMedication.timeTaken}
-                                    onChange={(e) => setCurrentMedication({ ...currentMedication, timeTaken: e.target.value })}
-                                    className="w-full p-3 border rounded-lg"
-                                />
-                            </div>
-                        </div>
+                        )}
                     </div>
                 );
 

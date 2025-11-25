@@ -3,7 +3,7 @@ setlocal
 
 :: Configuration
 set "PROJECT_PATH=/home/tahar/project/Maven/migraine-tracker"
-set "APP_URL=http://localhost:3000"
+set "APP_URL=http://localhost:3001"
 
 title Migraine Tracker Launcher
 color 0A

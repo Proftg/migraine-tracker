@@ -248,13 +248,6 @@ export default function Home() {
                             <FileDown className="h-4 w-4 mr-2" />
                             Export Excel
                         </Button>
-                        <Button
-                            variant={showClearConfirm ? "destructive" : "outline"}
-                            onClick={handleClearData}
-                        >
-                            <AlertTriangle className="h-4 w-4 mr-2" />
-                            {showClearConfirm ? "Confirmer la suppression" : "Vider l'historique"}
-                        </Button>
                     </div>
                 </div>
 
