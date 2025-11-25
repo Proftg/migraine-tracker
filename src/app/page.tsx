@@ -209,19 +209,40 @@ export default function Home() {
         setCrisisFreeDays(crisisDays);
     };
 
-    const handleExportPDF = () => {
-        exportService.toPDF(entries);
+    const handleExportPDF = async () => {
+        await exportService.toPDF(entries);
     };
 
-    const handleExportData = () => {
-        const dataStr = JSON.stringify(entries, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `migraine-backup-${new Date().toISOString().split('T')[0]}.json`;
-        link.click();
-        URL.revokeObjectURL(url);
+    const handleExportData = async () => {
+        try {
+            const response = await fetch('/api/backup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ entries }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert(`✅ Sauvegarde réussie !\n\nFichier enregistré dans :\n${result.path}`);
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('Erreur sauvegarde:', error);
+            // Fallback: Téléchargement classique si l'API échoue
+            const dataStr = JSON.stringify(entries, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `migraine-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+            alert('⚠️ Sauvegarde locale effectuée (le dossier serveur n\'était pas accessible).');
+        }
     };
 
     const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -256,13 +277,13 @@ export default function Home() {
         }
     };
 
-    const handleExportExcel = () => {
-        exportService.toExcel(entries);
+    const handleExportExcel = async () => {
+        await exportService.toExcel(entries);
     };
 
-    const handleClearData = () => {
+    const handleClearData = async () => {
         if (showClearConfirm) {
-            storage.clearAllData();
+            await storage.clearAllData();
             setEntries([]);
             setCrisisFreeDays(0);
             setLastTreatment(null);
@@ -274,7 +295,7 @@ export default function Home() {
         }
     };
 
-    const handleLogInjection = () => {
+    const handleLogInjection = async () => {
         const today = new Date();
         const nextMonth = new Date(today);
         nextMonth.setMonth(nextMonth.getMonth() + 1);
@@ -291,7 +312,7 @@ export default function Home() {
             notes: 'Injection mensuelle préventive Aimovig'
         };
 
-        const newEntries = storage.addEntry(treatmentEntry);
+        const newEntries = await storage.addEntry(treatmentEntry);
         setEntries(newEntries);
         setLastTreatment(treatmentEntry);
         setDaysUntilNextInjection(30);

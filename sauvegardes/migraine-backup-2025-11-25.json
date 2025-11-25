@@ -1,0 +1,30 @@
+[
+  {
+    "id": "1764086686515",
+    "date": "2025-11-25T16:04:46.515+00:00",
+    "type": "activity",
+    "notes": "Musculation - 120min (medium)",
+    "intensity": "medium",
+    "painLocation": null,
+    "symptoms": null,
+    "exactTime": "20:45",
+    "endTime": null,
+    "duration": 120,
+    "medicationAttempts": null,
+    "medicationName": null,
+    "medicationDosage": null,
+    "medicationTime": null,
+    "reliefDuration": null,
+    "reliefWithMedication": null,
+    "activityType": "Musculation",
+    "caloriesBurned": 917,
+    "totalCalories": null,
+    "mealBreakdown": null,
+    "name": null,
+    "dosage": null,
+    "frequency": null,
+    "startDate": null,
+    "nextDose": null,
+    "created_at": "2025-11-25T19:29:08.238321+00:00"
+  }
+]
