@@ -1,0 +1,19 @@
+INSTRUCTIONS POUR CRÉER L'ICÔNE SUR LE BUREAU
+
+1. Copier le fichier :
+   Allez dans le dossier de votre projet (là où se trouve ce fichier).
+   Faites un clic droit sur "Lancer_Migraine_Tracker.bat".
+   Choisissez "Envoyer vers" > "Bureau (créer un raccourci)".
+
+2. Changer l'icône (Optionnel) :
+   Allez sur votre Bureau.
+   Faites un clic droit sur le nouveau raccourci "Lancer_Migraine_Tracker.bat - Raccourci".
+   Cliquez sur "Propriétés".
+   Dans l'onglet "Raccourci", cliquez sur le bouton "Changer d'icône...".
+   Vous pouvez choisir une icône système ou parcourir pour trouver une icône personnalisée (.ico).
+   Validez par "OK".
+
+3. Utilisation :
+   Double-cliquez simplement sur l'icône pour lancer l'application.
+   Une fenêtre noire va s'ouvrir (c'est le serveur), ne la fermez pas tant que vous utilisez l'application.
+   Votre navigateur s'ouvrira automatiquement sur la page de Migraine Tracker.
