@@ -229,7 +229,7 @@ export default function Home() {
                 <div className="flex justify-between items-center">
                     <div>
                         <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                            Migraine Tracker AI
+                            Migraine
                         </h1>
                         <p className="text-muted-foreground mt-2">
                             Suivez vos migraines et découvrez vos déclencheurs

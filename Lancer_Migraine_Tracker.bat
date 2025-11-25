@@ -9,7 +9,7 @@ title Migraine Tracker Launcher
 color 0A
 echo.
 echo ==========================================
-echo   MIGRAINE TRACKER AI - LANCEUR
+echo   MIGRAINE - LANCEUR
 echo ==========================================
 echo.
 

@@ -442,7 +442,7 @@ export function MedicalReport({ entries, onClose }: MedicalReportProps) {
 
                 {/* Print Footer */}
                 <div className="print:block hidden mt-8 pt-4 border-t text-sm text-muted-foreground text-center">
-                    <p>Rapport généré par Migraine Tracker AI - {format(new Date(), 'dd/MM/yyyy')}</p>
+                    <p>Rapport généré par Migraine - {format(new Date(), 'dd/MM/yyyy')}</p>
                     <p className="mt-1">Ce rapport est destiné à faciliter la communication avec votre professionnel de santé</p>
                 </div>
             </div>
