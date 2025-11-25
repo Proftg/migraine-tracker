@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, Plus, TrendingDown, TrendingUp, FileDown, Trash2, FileText, AlertTriangle, Syringe, Calendar as CalendarIcon } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { storage } from "@/lib/storage";
 import { JournalEntry } from "@/types";
 import { formatDistanceToNow, format } from "date-fns";
@@ -19,6 +19,7 @@ export default function Home() {
     const [inputText, setInputText] = useState("");
     const [showCrisisMode, setShowCrisisMode] = useState(false);
     const [showSportsEntry, setShowSportsEntry] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [showCalorieReminder, setShowCalorieReminder] = useState(false);
     const [showMedicalReport, setShowMedicalReport] = useState(false);
     const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -175,6 +176,49 @@ export default function Home() {
         exportService.toPDF(entries);
     };
 
+    const handleExportData = () => {
+        const dataStr = JSON.stringify(entries, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `migraine-backup-${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const importedData = JSON.parse(e.target?.result as string);
+                if (Array.isArray(importedData)) {
+                    // Merge with existing data, avoiding duplicates
+                    const existingIds = new Set(entries.map(e => e.id));
+                    const newEntries = importedData.filter(entry => !existingIds.has(entry.id));
+                    const mergedEntries = [...entries, ...newEntries].sort((a, b) =>
+                        new Date(b.date).getTime() - new Date(a.date).getTime()
+                    );
+                    localStorage.setItem('migraine-tracker-data', JSON.stringify(mergedEntries));
+                    setEntries(mergedEntries);
+                    alert(`✅ ${newEntries.length} nouvelles entrées importées avec succès !`);
+                } else {
+                    alert('❌ Format de fichier invalide');
+                }
+            } catch (error) {
+                alert('❌ Erreur lors de l\'importation du fichier');
+            }
+        };
+        reader.readAsText(file);
+        // Reset input
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
     const handleExportExcel = () => {
         exportService.toExcel(entries);
     };
@@ -248,6 +292,21 @@ export default function Home() {
                             <FileDown className="h-4 w-4 mr-2" />
                             Export Excel
                         </Button>
+                        <Button variant="outline" onClick={handleExportData}>
+                            <FileDown className="h-4 w-4 mr-2" />
+                            💾 Sauvegarder
+                        </Button>
+                        <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                            <FileDown className="h-4 w-4 mr-2" />
+                            📂 Restaurer
+                        </Button>
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".json"
+                            onChange={handleImportData}
+                            style={{ display: 'none' }}
+                        />
                     </div>
                 </div>
 
