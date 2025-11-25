@@ -3,7 +3,7 @@ setlocal
 
 :: Configuration
 set "PROJECT_PATH=/home/tahar/project/Maven/migraine-tracker"
-set "APP_URL=http://localhost:3001"
+set "APP_URL=http://localhost:3000"
 
 title Migraine Tracker Launcher
 color 0A
@@ -44,7 +44,7 @@ echo   IMPORTANT: Ne fermez pas cette fenetre !
 echo ========================================================
 echo.
 
-wsl bash -l -c "cd %PROJECT_PATH% && npm run dev"
+wsl bash -l -c "cd %PROJECT_PATH% && npm run dev -- -p 3000"
 
 echo.
 echo Le serveur s'est arrete.

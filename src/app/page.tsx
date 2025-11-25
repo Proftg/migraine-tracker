@@ -26,11 +26,44 @@ export default function Home() {
     const [crisisFreeDays, setCrisisFreeDays] = useState(0);
     const [lastTreatment, setLastTreatment] = useState<any>(null);
     const [daysUntilNextInjection, setDaysUntilNextInjection] = useState<number | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
+    // Load data on mount and migrate from localStorage if needed
     useEffect(() => {
+        const loadData = async () => {
+            try {
+                // Migrate localStorage data to Supabase if exists
+                await storage.migrateToSupabase();
+
+                // Load entries from Supabase
+                const loadedEntries = await storage.getEntries();
+                setEntries(loadedEntries);
+
+                // Load other data
+                const crisisDays = await storage.getCrisisFreeDays();
+                setCrisisFreeDays(crisisDays);
+
+                const treatment = await storage.getLastTreatment();
+                setLastTreatment(treatment);
+
+                if (treatment) {
+                    const nextDose = new Date((treatment as any).nextDose || treatment.date);
+                    const today = new Date();
+                    const diffTime = nextDose.getTime() - today.getTime();
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    setDaysUntilNextInjection(diffDays);
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadData();
     }, []);
 
-    const handleAddEntry = () => {
+    const handleAddEntry = async () => {
         if (!inputText.trim()) return;
 
         const analysis = storage.analyzeText(inputText);
@@ -41,13 +74,14 @@ export default function Home() {
             ...analysis
         } as JournalEntry;
 
-        const updatedEntries = storage.addEntry(newEntry);
+        const updatedEntries = await storage.addEntry(newEntry);
         setEntries(updatedEntries);
-        setCrisisFreeDays(storage.getCrisisFreeDays());
+        const crisisDays = await storage.getCrisisFreeDays();
+        setCrisisFreeDays(crisisDays);
         setInputText("");
     };
 
-    const handleQuickAction = (type: 'migraine' | 'activity' | 'medication') => {
+    const handleQuickAction = async (type: 'migraine' | 'activity' | 'medication') => {
         let text = "";
         let entryType = type;
 
@@ -73,12 +107,13 @@ export default function Home() {
             ...(type === 'medication' ? { name: 'Médicament habituel', dosage: '1 dose' } : {})
         } as JournalEntry;
 
-        const updatedEntries = storage.addEntry(newEntry);
+        const updatedEntries = await storage.addEntry(newEntry);
         setEntries(updatedEntries);
-        setCrisisFreeDays(storage.getCrisisFreeDays());
+        const crisisDays = await storage.getCrisisFreeDays();
+        setCrisisFreeDays(crisisDays);
     };
 
-    const handleCrisisLog = (data: {
+    const handleCrisisLog = async (data: {
         intensity: number;
         location: string;
         symptoms: string[];
@@ -113,13 +148,14 @@ export default function Home() {
             notes: `Crise ${data.intensity}/10 - ${data.location} à ${data.exactTime}${data.duration ? ` (${data.duration}min)` : ''}`
         } as JournalEntry;
 
-        const updatedEntries = storage.addEntry(newEntry);
+        const updatedEntries = await storage.addEntry(newEntry);
         setEntries(updatedEntries);
-        setCrisisFreeDays(storage.getCrisisFreeDays());
+        const crisisDays = await storage.getCrisisFreeDays();
+        setCrisisFreeDays(crisisDays);
         setShowCrisisMode(false);
     };
 
-    const handleSportsLog = (data: {
+    const handleSportsLog = async (data: {
         activityType: string;
         exactTime: string;
         duration: number;
@@ -138,12 +174,12 @@ export default function Home() {
             notes: `${data.activityType} - ${data.duration}min (${data.intensity})`
         } as JournalEntry;
 
-        const updatedEntries = storage.addEntry(newEntry);
+        const updatedEntries = await storage.addEntry(newEntry);
         setEntries(updatedEntries);
         setShowSportsEntry(false);
     };
 
-    const handleCalorieLog = (data: {
+    const handleCalorieLog = async (data: {
         totalCalories: number;
         mealBreakdown?: {
             breakfast?: number;
@@ -161,15 +197,16 @@ export default function Home() {
             notes: `Calories journalières : ${data.totalCalories} kcal`
         } as JournalEntry;
 
-        const updatedEntries = storage.addEntry(newEntry);
+        const updatedEntries = await storage.addEntry(newEntry);
         setEntries(updatedEntries);
         setShowCalorieReminder(false);
     };
 
-    const handleDelete = (id: string) => {
-        const newEntries = storage.deleteEntry(id);
+    const handleDelete = async (id: string) => {
+        const newEntries = await storage.deleteEntry(id);
         setEntries(newEntries);
-        setCrisisFreeDays(storage.getCrisisFreeDays());
+        const crisisDays = await storage.getCrisisFreeDays();
+        setCrisisFreeDays(crisisDays);
     };
 
     const handleExportPDF = () => {
