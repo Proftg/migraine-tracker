@@ -5,11 +5,11 @@ setlocal
 set "PROJECT_PATH=/home/tahar/project/Maven/migraine-tracker"
 set "APP_URL=http://localhost:3000"
 
-title Migraine Tracker Launcher
+title MigraineChecker Launcher
 color 0A
 echo.
 echo ==========================================
-echo   MIGRAINE - LANCEUR
+echo   MIGRAINE CHECKER - LANCEUR
 echo ==========================================
 echo.
 

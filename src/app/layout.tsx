@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    title: "MigraineTracker",
+    title: "MigraineChecker",
     description: "Intelligent Migraine Tracking Journal",
     manifest: "/manifest.json",
 };

@@ -45,7 +45,7 @@ export const exportService = {
         const doc = new jsPDF();
 
         doc.setFontSize(20);
-        doc.text("Rapport MigraineTracker", 14, 22);
+        doc.text("Rapport MigraineChecker", 14, 22);
         doc.setFontSize(11);
         doc.text(`Généré le ${format(new Date(), 'dd/MM/yyyy')}`, 14, 30);
 
