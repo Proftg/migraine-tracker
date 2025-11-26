@@ -410,7 +410,7 @@ export function CrisisMode({ onClose, onLogCrisis }: CrisisModeProps) {
                                     value={reliefDuration || ''}
                                     onChange={(e) => setReliefDuration(Number(e.target.value))}
                                     placeholder="Ex: 30"
-                                    className="w-full p-3 border rounded-lg"
+                                    className="w-full p-3 border rounded-lg bg-background text-foreground"
                                 />
                             </div>
                         )}

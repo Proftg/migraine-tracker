@@ -18,23 +18,10 @@ CREATE TABLE IF NOT EXISTS journal_entries (
     "medicationName" TEXT,
     "medicationDosage" INTEGER,
     "medicationTime" TEXT,
-    "reliefDuration" INTEGER,
-    "reliefWithMedication" BOOLEAN,
-    
-    -- Champs pour les activités
-    "activityType" TEXT,
-    "caloriesBurned" INTEGER,
-    
-    -- Champs pour les calories
+    "nextDose" TEXT,
+    "daily_calories" INTEGER DEFAULT 0,
     "totalCalories" INTEGER,
     "mealBreakdown" JSONB,
-    
-    -- Champs pour les traitements
-    name TEXT,
-    dosage TEXT,
-    frequency TEXT,
-    "startDate" TEXT,
-    "nextDose" TEXT,
     
     -- Index pour améliorer les performances
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

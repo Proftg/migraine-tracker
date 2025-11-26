@@ -2,11 +2,12 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, Plus, TrendingDown, TrendingUp, FileDown, Trash2, FileText, AlertTriangle, Syringe, Calendar as CalendarIcon } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Plus, FileDown, Trash2, FileText } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { storage } from "@/lib/storage";
 import { JournalEntry } from "@/types";
-import { formatDistanceToNow, format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { exportService } from "@/lib/export";
 import { CrisisMode } from "@/components/migraine/CrisisMode";
@@ -32,83 +33,68 @@ export default function Home() {
     useEffect(() => {
         const loadData = async () => {
             try {
-                // Migrate localStorage data to Supabase if exists
                 await storage.migrateToSupabase();
-
-                // Load entries from Supabase
                 const loadedEntries = await storage.getEntries();
                 setEntries(loadedEntries);
-
-                // Load other data
                 const crisisDays = await storage.getCrisisFreeDays();
                 setCrisisFreeDays(crisisDays);
-
                 const treatment = await storage.getLastTreatment();
                 setLastTreatment(treatment);
-
                 if (treatment) {
                     const nextDose = new Date((treatment as any).nextDose || treatment.date);
                     const today = new Date();
-                    const diffTime = nextDose.getTime() - today.getTime();
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    const diffDays = Math.ceil((nextDose.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
                     setDaysUntilNextInjection(diffDays);
                 }
             } catch (error) {
-                console.error('Error loading data:', error);
+                console.error("Error loading data:", error);
             } finally {
                 setIsLoading(false);
             }
         };
-
         loadData();
     }, []);
 
     const handleAddEntry = async () => {
         if (!inputText.trim()) return;
-
         const analysis = storage.analyzeText(inputText);
         const newEntry: JournalEntry = {
             id: Date.now().toString(),
             date: new Date().toISOString(),
-            type: analysis.type as any || 'note',
-            ...analysis
-        } as JournalEntry;
-
-        const updatedEntries = await storage.addEntry(newEntry);
-        setEntries(updatedEntries);
+            type: analysis.type as any || "note",
+            ...analysis,
+        };
+        const updated = await storage.addEntry(newEntry);
+        setEntries(updated);
         const crisisDays = await storage.getCrisisFreeDays();
         setCrisisFreeDays(crisisDays);
         setInputText("");
     };
 
-    const handleQuickAction = async (type: 'migraine' | 'activity' | 'medication') => {
+    const handleQuickAction = async (type: "migraine" | "activity" | "medication") => {
         let text = "";
-        let entryType = type;
-
         switch (type) {
-            case 'migraine':
+            case "migraine":
                 text = "Crise signalée (Rapide)";
                 break;
-            case 'activity':
+            case "activity":
                 text = "Activité sportive (Rapide)";
                 break;
-            case 'medication':
+            case "medication":
                 text = "Prise de médicament (Rapide)";
                 break;
         }
-
         const newEntry: JournalEntry = {
             id: Date.now().toString(),
             date: new Date().toISOString(),
-            type: entryType,
+            type,
             notes: text,
-            ...(type === 'migraine' ? { intensity: 5 } : {}),
-            ...(type === 'activity' ? { activityType: 'Sport', duration: 30, intensity: 'medium' } : {}),
-            ...(type === 'medication' ? { name: 'Médicament habituel', dosage: '1 dose' } : {})
-        } as JournalEntry;
-
-        const updatedEntries = await storage.addEntry(newEntry);
-        setEntries(updatedEntries);
+            ...(type === "migraine" ? { intensity: 5 } : {}),
+            ...(type === "activity" ? { activityType: "Sport", duration: 30, intensity: "medium" } : {}),
+            ...(type === "medication" ? { name: "Médicament habituel", dosage: "1 dose" } : {}),
+        };
+        const updated = await storage.addEntry(newEntry);
+        setEntries(updated);
         const crisisDays = await storage.getCrisisFreeDays();
         setCrisisFreeDays(crisisDays);
     };
@@ -121,7 +107,6 @@ export default function Home() {
         endTime?: string;
         duration?: number;
         medicationAttempts?: any[];
-        // Legacy fields
         medicationName?: string;
         medicationDosage?: number;
         medicationTime?: string;
@@ -131,7 +116,7 @@ export default function Home() {
         const newEntry: JournalEntry = {
             id: Date.now().toString(),
             date: new Date().toISOString(),
-            type: 'migraine',
+            type: "migraine",
             intensity: data.intensity,
             painLocation: data.location,
             symptoms: data.symptoms,
@@ -139,17 +124,15 @@ export default function Home() {
             endTime: data.endTime,
             duration: data.duration,
             medicationAttempts: data.medicationAttempts,
-            // Legacy fields mapping
             medicationName: data.medicationName,
             medicationDosage: data.medicationDosage,
             medicationTime: data.medicationTime,
             reliefDuration: data.reliefDuration,
             reliefWithMedication: data.reliefWithMedication,
-            notes: `Crise ${data.intensity}/10 - ${data.location} à ${data.exactTime}${data.duration ? ` (${data.duration}min)` : ''}`
-        } as JournalEntry;
-
-        const updatedEntries = await storage.addEntry(newEntry);
-        setEntries(updatedEntries);
+            notes: `Crise ${data.intensity}/10 - ${data.location} à ${data.exactTime}${data.duration ? ` (${data.duration}min)` : ""}`,
+        };
+        const updated = await storage.addEntry(newEntry);
+        setEntries(updated);
         const crisisDays = await storage.getCrisisFreeDays();
         setCrisisFreeDays(crisisDays);
         setShowCrisisMode(false);
@@ -159,23 +142,22 @@ export default function Home() {
         activityType: string;
         exactTime: string;
         duration: number;
-        intensity: 'low' | 'medium' | 'high';
+        intensity: "low" | "medium" | "high";
         caloriesBurned?: number;
     }) => {
         const newEntry: JournalEntry = {
             id: Date.now().toString(),
             date: new Date().toISOString(),
-            type: 'activity',
+            type: "activity",
             activityType: data.activityType,
             exactTime: data.exactTime,
             duration: data.duration,
             intensity: data.intensity,
             caloriesBurned: data.caloriesBurned,
-            notes: `${data.activityType} - ${data.duration}min (${data.intensity})`
-        } as JournalEntry;
-
-        const updatedEntries = await storage.addEntry(newEntry);
-        setEntries(updatedEntries);
+            notes: `${data.activityType} - ${data.duration}min (${data.intensity})`,
+        };
+        const updated = await storage.addEntry(newEntry);
+        setEntries(updated);
         setShowSportsEntry(false);
     };
 
@@ -191,20 +173,19 @@ export default function Home() {
         const newEntry: JournalEntry = {
             id: Date.now().toString(),
             date: new Date().toISOString(),
-            type: 'calories',
+            type: "calories",
             totalCalories: data.totalCalories,
             mealBreakdown: data.mealBreakdown,
-            notes: `Calories journalières : ${data.totalCalories} kcal`
-        } as JournalEntry;
-
-        const updatedEntries = await storage.addEntry(newEntry);
-        setEntries(updatedEntries);
+            notes: `Calories journalières : ${data.totalCalories} kcal`,
+        };
+        const updated = await storage.addEntry(newEntry);
+        setEntries(updated);
         setShowCalorieReminder(false);
     };
 
     const handleDelete = async (id: string) => {
-        const newEntries = await storage.deleteEntry(id);
-        setEntries(newEntries);
+        const updated = await storage.deleteEntry(id);
+        setEntries(updated);
         const crisisDays = await storage.getCrisisFreeDays();
         setCrisisFreeDays(crisisDays);
     };
@@ -215,66 +196,54 @@ export default function Home() {
 
     const handleExportData = async () => {
         try {
-            const response = await fetch('/api/backup', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+            const response = await fetch("/api/backup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ entries }),
             });
-
             const result = await response.json();
-
             if (result.success) {
                 alert(`✅ Sauvegarde réussie !\n\nFichier enregistré dans :\n${result.path}`);
             } else {
                 throw new Error(result.message);
             }
         } catch (error) {
-            console.error('Erreur sauvegarde:', error);
-            // Fallback: Téléchargement classique si l'API échoue
+            console.error("Erreur sauvegarde:", error);
             const dataStr = JSON.stringify(entries, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
             link.href = url;
-            link.download = `migraine-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.download = `migraine-backup-${new Date().toISOString().split("T")[0]}.json`;
             link.click();
             URL.revokeObjectURL(url);
-            alert('⚠️ Sauvegarde locale effectuée (le dossier serveur n\'était pas accessible).');
+            alert("⚠️ Sauvegarde locale effectuée (le dossier serveur n'était pas accessible).");
         }
     };
 
-    const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
+    const handleImportData = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
         if (!file) return;
-
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = (ev) => {
             try {
-                const importedData = JSON.parse(e.target?.result as string);
-                if (Array.isArray(importedData)) {
-                    // Merge with existing data, avoiding duplicates
-                    const existingIds = new Set(entries.map(e => e.id));
-                    const newEntries = importedData.filter(entry => !existingIds.has(entry.id));
-                    const mergedEntries = [...entries, ...newEntries].sort((a, b) =>
-                        new Date(b.date).getTime() - new Date(a.date).getTime()
-                    );
-                    localStorage.setItem('migraine-tracker-data', JSON.stringify(mergedEntries));
-                    setEntries(mergedEntries);
+                const imported = JSON.parse(ev.target?.result as string);
+                if (Array.isArray(imported)) {
+                    const existing = new Set(entries.map((e) => e.id));
+                    const newEntries = imported.filter((e) => !existing.has(e.id));
+                    const merged = [...entries, ...newEntries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                    localStorage.setItem("migraine-tracker-data", JSON.stringify(merged));
+                    setEntries(merged);
                     alert(`✅ ${newEntries.length} nouvelles entrées importées avec succès !`);
                 } else {
-                    alert('❌ Format de fichier invalide');
+                    alert("❌ Format de fichier invalide");
                 }
-            } catch (error) {
-                alert('❌ Erreur lors de l\'importation du fichier');
+            } catch {
+                alert("❌ Erreur lors de l'importation du fichier");
             }
         };
         reader.readAsText(file);
-        // Reset input
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
+        if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
     const handleExportExcel = async () => {
@@ -299,30 +268,27 @@ export default function Home() {
         const today = new Date();
         const nextMonth = new Date(today);
         nextMonth.setMonth(nextMonth.getMonth() + 1);
-
         const treatmentEntry: any = {
             id: Date.now().toString(),
             date: today.toISOString(),
-            type: 'treatment',
-            medicationName: 'Aimovig SC',
-            dosage: '140mg / 1ml',
-            administrationRoute: 'Injection sous-cutanée',
+            type: "treatment",
+            medicationName: "Aimovig SC",
+            dosage: "140mg / 1ml",
+            administrationRoute: "Injection sous-cutanée",
             nextDueDate: nextMonth.toISOString(),
             isPreventive: true,
-            notes: 'Injection mensuelle préventive Aimovig'
+            notes: "Injection mensuelle préventive Aimovig",
         };
-
-        const newEntries = await storage.addEntry(treatmentEntry);
-        setEntries(newEntries);
+        const updated = await storage.addEntry(treatmentEntry);
+        setEntries(updated);
         setLastTreatment(treatmentEntry);
         setDaysUntilNextInjection(30);
         alert("✅ Injection enregistrée ! Prochaine injection prévue dans 30 jours.");
     };
 
-    const migraineCount = entries.filter(e => e.type === 'migraine').length;
-    const avgIntensity = entries
-        .filter(e => e.type === 'migraine')
-        .reduce((sum, e) => sum + ((e as any).intensity || 0), 0) / (migraineCount || 1);
+    const migraineCount = entries.filter((e) => e.type === "migraine").length;
+    const avgIntensity =
+        entries.filter((e) => e.type === "migraine").reduce((sum, e) => sum + ((e as any).intensity || 0), 0) / (migraineCount || 1);
 
     return (
         <div className="min-h-screen p-8">
@@ -333,9 +299,7 @@ export default function Home() {
                         <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                             MigraineChecker
                         </h1>
-                        <p className="text-muted-foreground mt-2">
-                            Suivez vos migraines et découvrez vos déclencheurs
-                        </p>
+                        <p className="text-muted-foreground mt-2">Suivez vos migraines et découvrez vos déclencheurs</p>
                     </div>
                     <div className="flex gap-2">
                         <Button onClick={() => setShowMedicalReport(true)} variant="default">
@@ -363,165 +327,13 @@ export default function Home() {
                             type="file"
                             accept=".json"
                             onChange={handleImportData}
-                            style={{ display: 'none' }}
+                            style={{ display: "none" }}
                         />
                     </div>
                 </div>
 
-                {/* Clear Confirmation Alert */}
-                {showClearConfirm && (
-                    <Card className="border-destructive bg-destructive/10">
-                        <CardContent className="pt-6">
-                            <div className="flex items-start gap-4">
-                                <AlertTriangle className="h-6 w-6 text-destructive flex-shrink-0 mt-1" />
-                                <div className="flex-1">
-                                    <h3 className="font-semibold text-destructive mb-2">
-                                        Attention : Suppression définitive
-                                    </h3>
-                                    <p className="text-sm text-muted-foreground mb-4">
-                                        Vous êtes sur le point de supprimer TOUTES vos données ({entries.length} entrées).
-                                        Cette action est irréversible. Cliquez à nouveau sur "Confirmer la suppression" pour continuer,
-                                        ou sur "Annuler" pour garder vos données.
-                                    </p>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setShowClearConfirm(false)}
-                                    >
-                                        Annuler
-                                    </Button>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* Treatment & Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* Crisis-Free Days Counter */}
-                    <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Jours sans crise</CardTitle>
-                            <Activity className="h-4 w-4 text-green-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-4xl font-bold text-green-600">{crisisFreeDays}</div>
-                            <p className="text-xs text-muted-foreground mt-2">
-                                Continuez comme ça ! 💪
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    {/* Treatment Countdown */}
-                    <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Prochaine injection</CardTitle>
-                            <Syringe className="h-4 w-4 text-purple-600" />
-                        </CardHeader>
-                        <CardContent>
-                            {lastTreatment && daysUntilNextInjection !== null ? (
-                                <>
-                                    <div className="text-4xl font-bold text-purple-600">
-                                        {daysUntilNextInjection > 0 ? daysUntilNextInjection : 0}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground mt-2">
-                                        {daysUntilNextInjection <= 3 && daysUntilNextInjection > 0 ? "⏰ Bientôt !" :
-                                            daysUntilNextInjection <= 0 ? "📅 Aujourd'hui !" : "jours restants"}
-                                    </p>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="text-2xl font-bold text-purple-600">--</div>
-                                    <p className="text-xs text-muted-foreground mt-2">
-                                        Aucune injection enregistrée
-                                    </p>
-                                </>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    {/* Migraine Count */}
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Crises totales</CardTitle>
-                            <Activity className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{migraineCount}</div>
-                            <p className="text-xs text-muted-foreground">
-                                <TrendingDown className="inline h-3 w-3" /> Total enregistré
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    {/* Average Intensity */}
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Intensité moyenne</CardTitle>
-                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{avgIntensity.toFixed(1)}/10</div>
-                            <p className="text-xs text-muted-foreground">Basé sur {migraineCount} crises</p>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Treatment Tracking Card */}
-                <Card className="border-purple-500/30 bg-gradient-to-br from-purple-500/5 to-pink-500/5">
-                    <CardHeader>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Syringe className="h-5 w-5 text-purple-600" />
-                                    Traitement Préventif Aimovig
-                                </CardTitle>
-                                <CardDescription className="mt-2">
-                                    Injection mensuelle - 140mg / 1ml
-                                </CardDescription>
-                            </div>
-                            <Button onClick={handleLogInjection} className="bg-purple-600 hover:bg-purple-700">
-                                <Syringe className="h-4 w-4 mr-2" />
-                                Enregistrer injection
-                            </Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        {lastTreatment ? (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Dernière injection</p>
-                                    <p className="text-lg font-semibold mt-1">
-                                        {format(new Date(lastTreatment.date), 'dd/MM/yyyy', { locale: fr })}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Prochaine injection prévue</p>
-                                    <p className="text-lg font-semibold mt-1">
-                                        {format(new Date((lastTreatment as any).nextDueDate), 'dd/MM/yyyy', { locale: fr })}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Jours restants</p>
-                                    <p className="text-lg font-semibold mt-1 text-purple-600">
-                                        {daysUntilNextInjection !== null && daysUntilNextInjection > 0 ? daysUntilNextInjection : 0} jours
-                                    </p>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="text-center py-8">
-                                <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                                <p className="text-muted-foreground mb-4">
-                                    Aucune injection enregistrée. Cliquez sur le bouton ci-dessus pour enregistrer votre première injection Aimovig.
-                                </p>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-
-                {/* Quick Actions - 2 Buttons */}
+                {/* Quick Actions */}
                 <div className="flex justify-center gap-12 py-8">
-                    {/* Signaler une crise (ex-SOS) */}
                     <div className="flex flex-col items-center gap-3">
                         <Button
                             onClick={() => setShowCrisisMode(true)}
@@ -530,12 +342,8 @@ export default function Home() {
                         >
                             🆘
                         </Button>
-                        <span className="text-sm font-medium text-muted-foreground">
-                            Signaler une Crise
-                        </span>
+                        <span className="text-sm font-medium text-muted-foreground">Signaler une Crise</span>
                     </div>
-
-                    {/* Activité Sportive (améliorée) */}
                     <div className="flex flex-col items-center gap-3">
                         <Button
                             onClick={() => setShowSportsEntry(true)}
@@ -544,9 +352,17 @@ export default function Home() {
                         >
                             🏃
                         </Button>
-                        <span className="text-sm font-medium text-muted-foreground">
-                            Activité Sportive
-                        </span>
+                        <span className="text-sm font-medium text-muted-foreground">Activité Sportive</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-3">
+                        <Button
+                            onClick={() => setShowCalorieReminder(true)}
+                            className="h-24 w-24 rounded-full shadow-lg text-4xl bg-orange-600 hover:bg-orange-700 transition-transform hover:scale-110"
+                            variant="default"
+                        >
+                            📊
+                        </Button>
+                        <span className="text-sm font-medium text-muted-foreground">Apport Calorique</span>
                     </div>
                 </div>
 
@@ -554,9 +370,7 @@ export default function Home() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Journal Rapide</CardTitle>
-                        <CardDescription>
-                            Décrivez votre état, l&apos;IA analysera automatiquement
-                        </CardDescription>
+                        <CardDescription>Décrivez votre état, l'IA analysera automatiquement</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <textarea
@@ -587,26 +401,31 @@ export default function Home() {
                                 >
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2">
-                                            <span className="font-medium capitalize">{entry.type === 'treatment' ? '💉 Traitement' : entry.type}</span>
-                                            {entry.type === 'migraine' && (
+                                            <span className="font-medium capitalize">
+                                                {entry.type === "treatment" ? "💉 Traitement" : entry.type}
+                                            </span>
+                                            {entry.type === "migraine" && (
                                                 <span className="text-xs px-2 py-1 rounded-full bg-destructive/20 text-destructive">
                                                     Intensité: {(entry as any).intensity}/10
                                                 </span>
                                             )}
-                                            {entry.type === 'treatment' && (
+                                            {entry.type === "treatment" && (
                                                 <span className="text-xs px-2 py-1 rounded-full bg-purple-500/20 text-purple-600">
                                                     Aimovig 140mg
                                                 </span>
                                             )}
-                                            {entry.type === 'activity' && (entry as any).caloriesBurned && (
+                                            {entry.type === "activity" && (entry as any).caloriesBurned && (
                                                 <span className="text-xs px-2 py-1 rounded-full bg-orange-500/20 text-orange-600">
                                                     🔥 {(entry as any).caloriesBurned} kcal
                                                 </span>
                                             )}
+                                            {entry.type === "calories" && (
+                                                <span className="text-xs px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-600">
+                                                    🍎 {(entry as any).totalCalories} kcal
+                                                </span>
+                                            )}
                                         </div>
-                                        <p className="text-sm text-muted-foreground mt-1">
-                                            {entry.notes || 'Pas de notes'}
-                                        </p>
+                                        <p className="text-sm text-muted-foreground mt-1">{entry.notes || "Pas de notes"}</p>
                                         <p className="text-xs text-muted-foreground mt-2">
                                             {formatDistanceToNow(new Date(entry.date), { addSuffix: true, locale: fr })}
                                         </p>
@@ -624,36 +443,19 @@ export default function Home() {
                         </div>
                     </CardContent>
                 </Card>
+
+                {/* Modals */}
+                {showCrisisMode && <CrisisMode onClose={() => setShowCrisisMode(false)} onLogCrisis={handleCrisisLog} />}
+                {showSportsEntry && <SportsQuickEntry onClose={() => setShowSportsEntry(false)} onSave={handleSportsLog} />}
+                {showCalorieReminder && (
+                    <Dialog open={showCalorieReminder} onOpenChange={setShowCalorieReminder}>
+                        <DialogContent>
+                            <DailyCalorieReminder onClose={() => setShowCalorieReminder(false)} onSave={handleCalorieLog} />
+                        </DialogContent>
+                    </Dialog>
+                )}
+                {showMedicalReport && <MedicalReport entries={entries} onClose={() => setShowMedicalReport(false)} />}
             </div>
-
-            {/* Modals */}
-            {showCrisisMode && (
-                <CrisisMode
-                    onClose={() => setShowCrisisMode(false)}
-                    onLogCrisis={handleCrisisLog}
-                />
-            )}
-
-            {showSportsEntry && (
-                <SportsQuickEntry
-                    onClose={() => setShowSportsEntry(false)}
-                    onSave={handleSportsLog}
-                />
-            )}
-
-            {showCalorieReminder && (
-                <DailyCalorieReminder
-                    onClose={() => setShowCalorieReminder(false)}
-                    onSave={handleCalorieLog}
-                />
-            )}
-
-            {showMedicalReport && (
-                <MedicalReport
-                    entries={entries}
-                    onClose={() => setShowMedicalReport(false)}
-                />
-            )}
         </div>
     );
 }
