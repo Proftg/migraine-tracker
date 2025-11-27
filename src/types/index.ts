@@ -5,6 +5,12 @@ export interface BaseEntry {
     date: string; // ISO string
     type: EntryType;
     notes?: string;
+    weather?: {
+        temperature: number;
+        pressure: number;
+        humidity: number;
+        weatherCode: number;
+    };
 }
 
 // Multiple medication attempts tracking

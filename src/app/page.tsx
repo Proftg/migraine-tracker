@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Plus, FileDown, Trash2, FileText } from "lucide-react";
+import { Plus, FileDown, Trash2, FileText, Cloud, Droplets, Gauge } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { storage } from "@/lib/storage";
 import { JournalEntry } from "@/types";
@@ -14,6 +14,12 @@ import { CrisisMode } from "@/components/migraine/CrisisMode";
 import { SportsQuickEntry } from "@/components/migraine/SportsQuickEntry";
 import { DailyCalorieReminder } from "@/components/migraine/DailyCalorieReminder";
 import { MedicalReport } from "@/components/migraine/MedicalReport";
+import { weatherService, WeatherData } from "@/lib/weather";
+import { riskService, RiskAssessment } from "@/lib/risk";
+import { RiskIndicator } from "@/components/migraine/RiskIndicator";
+import { predictionService, PredictionResult } from "@/lib/prediction";
+import { PredictionWidget } from "@/components/migraine/PredictionWidget";
+import { GarminCharts } from "@/components/migraine/GarminCharts";
 
 export default function Home() {
     const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -28,6 +34,10 @@ export default function Home() {
     const [lastTreatment, setLastTreatment] = useState<any>(null);
     const [daysUntilNextInjection, setDaysUntilNextInjection] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
+    const [riskAssessment, setRiskAssessment] = useState<RiskAssessment | null>(null);
+    const [prediction, setPrediction] = useState<PredictionResult | null>(null);
+    const [isPredicting, setIsPredicting] = useState(false);
 
     // Load data on mount and migrate from localStorage if needed
     useEffect(() => {
@@ -53,7 +63,56 @@ export default function Home() {
             }
         };
         loadData();
+
+        // Fetch weather
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                try {
+                    const weather = await weatherService.getCurrentWeather(
+                        position.coords.latitude,
+                        position.coords.longitude
+                    );
+                    setCurrentWeather(weather);
+                } catch (error) {
+                    console.error("Error fetching weather:", error);
+                }
+            });
+        }
     }, []);
+
+    // Recalculate risk and prediction when entries or weather change
+    useEffect(() => {
+        const updateAI = async () => {
+            if (entries.length > 0 || currentWeather) {
+                // Risk Score
+                const assessment = riskService.calculateRisk(entries, currentWeather);
+                setRiskAssessment(assessment);
+
+                // Prediction (TensorFlow.js)
+                if (entries.length >= 5) {
+                    setIsPredicting(true);
+                    // Small delay to allow UI to render loading state
+                    setTimeout(async () => {
+                        await predictionService.train(entries);
+                        const result = await predictionService.predictNextDay(entries, currentWeather);
+                        setPrediction(result);
+                        setIsPredicting(false);
+                    }, 500);
+                }
+            }
+        };
+        updateAI();
+    }, [entries, currentWeather]);
+
+    const getEntryWeather = () => {
+        if (!currentWeather) return undefined;
+        return {
+            temperature: currentWeather.temperature,
+            pressure: currentWeather.pressure,
+            humidity: currentWeather.humidity,
+            weatherCode: currentWeather.weatherCode
+        };
+    };
 
     const handleAddEntry = async () => {
         if (!inputText.trim()) return;
@@ -63,6 +122,7 @@ export default function Home() {
             date: new Date().toISOString(),
             type: analysis.type as any || "note",
             ...analysis,
+            weather: getEntryWeather()
         };
         const updated = await storage.addEntry(newEntry);
         setEntries(updated);
@@ -92,6 +152,7 @@ export default function Home() {
             ...(type === "migraine" ? { intensity: 5 } : {}),
             ...(type === "activity" ? { activityType: "Sport", duration: 30, intensity: "medium" } : {}),
             ...(type === "medication" ? { name: "Médicament habituel", dosage: "1 dose" } : {}),
+            weather: getEntryWeather()
         };
         const updated = await storage.addEntry(newEntry);
         setEntries(updated);
@@ -130,6 +191,7 @@ export default function Home() {
             reliefDuration: data.reliefDuration,
             reliefWithMedication: data.reliefWithMedication,
             notes: `Crise ${data.intensity}/10 - ${data.location} à ${data.exactTime}${data.duration ? ` (${data.duration}min)` : ""}`,
+            weather: getEntryWeather()
         };
         const updated = await storage.addEntry(newEntry);
         setEntries(updated);
@@ -155,6 +217,7 @@ export default function Home() {
             intensity: data.intensity,
             caloriesBurned: data.caloriesBurned,
             notes: `${data.activityType} - ${data.duration}min (${data.intensity})`,
+            weather: getEntryWeather()
         };
         const updated = await storage.addEntry(newEntry);
         setEntries(updated);
@@ -177,6 +240,7 @@ export default function Home() {
             totalCalories: data.totalCalories,
             mealBreakdown: data.mealBreakdown,
             notes: `Calories journalières : ${data.totalCalories} kcal`,
+            weather: getEntryWeather()
         };
         const updated = await storage.addEntry(newEntry);
         setEntries(updated);
@@ -278,6 +342,7 @@ export default function Home() {
             nextDueDate: nextMonth.toISOString(),
             isPreventive: true,
             notes: "Injection mensuelle préventive Aimovig",
+            weather: getEntryWeather()
         };
         const updated = await storage.addEntry(treatmentEntry);
         setEntries(updated);
@@ -294,33 +359,73 @@ export default function Home() {
         <div className="min-h-screen p-8">
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header */}
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                            MigraineChecker
-                        </h1>
-                        <p className="text-muted-foreground mt-2">Suivez vos migraines et découvrez vos déclencheurs</p>
+                <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
+                    <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+                        <div>
+                            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                                MigraineChecker
+                            </h1>
+                            <p className="text-muted-foreground mt-2">Suivez vos migraines et découvrez vos déclencheurs</p>
+                        </div>
+
+                        {/* Weather Widget */}
+                        {currentWeather && (
+                            <Card className="bg-blue-50/50 border-blue-100 shadow-sm">
+                                <CardContent className="p-3 flex items-center gap-4">
+                                    <div className="text-center px-2 border-r border-blue-200/50">
+                                        <div className="text-2xl">{weatherService.getWeatherIcon(currentWeather.weatherCode)}</div>
+                                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mt-1">
+                                            {weatherService.getWeatherDescription(currentWeather.weatherCode)}
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-4 px-2">
+                                        <div className="flex flex-col items-center">
+                                            <div className="flex items-center gap-1 text-sm font-bold text-slate-700">
+                                                <Cloud className="h-4 w-4 text-blue-500" />
+                                                {currentWeather.temperature}°
+                                            </div>
+                                            <span className="text-[10px] text-muted-foreground">Temp.</span>
+                                        </div>
+                                        <div className="flex flex-col items-center">
+                                            <div className="flex items-center gap-1 text-sm font-bold text-slate-700">
+                                                <Gauge className="h-4 w-4 text-purple-500" />
+                                                {currentWeather.pressure}
+                                            </div>
+                                            <span className="text-[10px] text-muted-foreground">hPa</span>
+                                        </div>
+                                        <div className="flex flex-col items-center">
+                                            <div className="flex items-center gap-1 text-sm font-bold text-slate-700">
+                                                <Droplets className="h-4 w-4 text-cyan-500" />
+                                                {currentWeather.humidity}%
+                                            </div>
+                                            <span className="text-[10px] text-muted-foreground">Hum.</span>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
                     </div>
-                    <div className="flex gap-2">
-                        <Button onClick={() => setShowMedicalReport(true)} variant="default">
+
+                    <div className="flex flex-wrap gap-2">
+                        <Button onClick={() => setShowMedicalReport(true)} variant="default" size="sm">
                             <FileText className="h-4 w-4 mr-2" />
-                            Rapport Médical
+                            Rapport
                         </Button>
-                        <Button variant="outline" onClick={handleExportPDF}>
+                        <Button variant="outline" size="sm" onClick={handleExportPDF}>
                             <FileDown className="h-4 w-4 mr-2" />
-                            Export PDF
+                            PDF
                         </Button>
-                        <Button variant="outline" onClick={handleExportExcel}>
+                        <Button variant="outline" size="sm" onClick={handleExportExcel}>
                             <FileDown className="h-4 w-4 mr-2" />
-                            Export Excel
+                            Excel
                         </Button>
-                        <Button variant="outline" onClick={handleExportData}>
+                        <Button variant="outline" size="sm" onClick={handleExportData}>
                             <FileDown className="h-4 w-4 mr-2" />
-                            💾 Sauvegarder
+                            Sauvegarder
                         </Button>
-                        <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                        <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
                             <FileDown className="h-4 w-4 mr-2" />
-                            📂 Restaurer
+                            Restaurer
                         </Button>
                         <input
                             ref={fileInputRef}
@@ -330,6 +435,16 @@ export default function Home() {
                             style={{ display: "none" }}
                         />
                     </div>
+                </div>
+
+                {/* AI Dashboard Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                    {riskAssessment && <RiskIndicator assessment={riskAssessment} />}
+                    <PredictionWidget
+                        prediction={prediction}
+                        isLoading={isPredicting}
+                        dataCount={entries.length}
+                    />
                 </div>
 
                 {/* Quick Actions */}
@@ -374,7 +489,7 @@ export default function Home() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <textarea
-                            className="w-full min-h-[100px] p-4 rounded-lg border bg-background"
+                            className="w-full min-h-[100px] p-4 rounded-lg border bg-background text-foreground"
                             placeholder="Ex: 'Migraine forte côté droit, nausée, après avoir mangé du chocolat'"
                             value={inputText}
                             onChange={(e) => setInputText(e.target.value)}
@@ -422,6 +537,11 @@ export default function Home() {
                                             {entry.type === "calories" && (
                                                 <span className="text-xs px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-600">
                                                     🍎 {(entry as any).totalCalories} kcal
+                                                </span>
+                                            )}
+                                            {entry.weather && (
+                                                <span className="text-xs px-2 py-1 rounded-full bg-blue-500/10 text-blue-600 flex items-center gap-1" title={`${entry.weather.pressure} hPa`}>
+                                                    {weatherService.getWeatherIcon(entry.weather.weatherCode)} {entry.weather.temperature}°C
                                                 </span>
                                             )}
                                         </div>
