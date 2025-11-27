@@ -10,6 +10,7 @@ import { ScreenTimeChart } from "@/components/charts/ScreenTimeChart";
 import { SportsAnalysisChart } from "@/components/charts/SportsAnalysisChart";
 import { BeforeAfterChart } from "@/components/charts/BeforeAfterChart";
 import { CalorieCorrelationChart } from "@/components/charts/CalorieCorrelationChart";
+import { GarminCharts } from "@/components/migraine/GarminCharts";
 import { subDays, subMonths, format } from "date-fns";
 
 interface MedicalReportProps {
@@ -393,6 +394,19 @@ export function MedicalReport({ entries, onClose }: MedicalReportProps) {
                         </CardContent>
                     </Card>
                 )}
+
+                {/* Garmin Health Data */}
+                <Card className="mb-8">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            ⌚ Données de Santé Garmin
+                        </CardTitle>
+                        <CardDescription>Analyse du sommeil et du stress</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <GarminCharts />
+                    </CardContent>
+                </Card>
 
                 {/* Key Insights */}
                 <Card className="mb-8">

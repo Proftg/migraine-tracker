@@ -238,48 +238,131 @@ export const analytics = {
     // Screen Time Analysis
     getScreenTimeAnalysis: (entries: JournalEntry[]): ScreenTimeAnalysis => {
         const migraines = entries.filter(e => e.type === 'migraine') as MigraineEntry[];
-        const migrainesWithScreenData = migraines.filter(m => m.screenTimeBeforeCrisis !== undefined);
+        const screenTimeEntries = entries.filter(e => e.type === 'screentime') as any[]; // Cast to any to access ScreenTimeEntry props
 
+        // If no dedicated screen time entries, fallback to legacy migraine.screenTimeBeforeCrisis
+        if (screenTimeEntries.length === 0) {
+            const migrainesWithScreenData = migraines.filter(m => m.screenTimeBeforeCrisis !== undefined);
+
+            const ranges = [
+                { range: '0-2h', min: 0, max: 2 },
+                { range: '2-4h', min: 2, max: 4 },
+                { range: '4-6h', min: 4, max: 6 },
+                { range: '6-8h', min: 6, max: 8 },
+                { range: '8h+', min: 8, max: Infinity }
+            ];
+
+            const riskByDuration = ranges.map(({ range, min, max }) => {
+                const count = migrainesWithScreenData.filter(m =>
+                    m.screenTimeBeforeCrisis! >= min && m.screenTimeBeforeCrisis! < max
+                ).length;
+                const percentage = migrainesWithScreenData.length > 0
+                    ? (count / migrainesWithScreenData.length) * 100
+                    : 0;
+                return { range, count, percentage };
+            });
+
+            const migrainesWithBreaks = migrainesWithScreenData.filter(m => m.hadBreaks).length;
+            const migrainesWithoutBreaks = migrainesWithScreenData.length - migrainesWithBreaks;
+
+            const breaksImpact: TriggerCorrelation = {
+                withTrigger: migrainesWithoutBreaks,
+                withoutTrigger: migrainesWithBreaks,
+                averageIntensityWithTrigger: 0,
+                averageIntensityWithoutTrigger: 0,
+                riskIncrease: migrainesWithBreaks > 0
+                    ? ((migrainesWithoutBreaks - migrainesWithBreaks) / migrainesWithBreaks) * 100
+                    : 0
+            };
+
+            const averageScreenTimeBeforeCrisis = migrainesWithScreenData.length > 0
+                ? migrainesWithScreenData.reduce((sum, m) => sum + (m.screenTimeBeforeCrisis || 0), 0) / migrainesWithScreenData.length
+                : 0;
+
+            return {
+                riskByDuration,
+                breaksImpact,
+                averageScreenTimeBeforeCrisis,
+                criticalThreshold: 6
+            };
+        }
+
+        // New Logic using ScreenTimeEntry
         const ranges = [
-            { range: '0-2h', min: 0, max: 2 },
-            { range: '2-4h', min: 2, max: 4 },
+            { range: '0-4h', min: 0, max: 4 },
             { range: '4-6h', min: 4, max: 6 },
             { range: '6-8h', min: 6, max: 8 },
-            { range: '8h+', min: 8, max: Infinity }
+            { range: '8-10h', min: 8, max: 10 },
+            { range: '10h+', min: 10, max: Infinity }
         ];
 
         const riskByDuration = ranges.map(({ range, min, max }) => {
-            const count = migrainesWithScreenData.filter(m =>
-                m.screenTimeBeforeCrisis! >= min && m.screenTimeBeforeCrisis! < max
-            ).length;
-            const percentage = migrainesWithScreenData.length > 0
-                ? (count / migrainesWithScreenData.length) * 100
-                : 0;
-            return { range, count, percentage };
+            let daysInRange = 0;
+            let migrainesInRange = 0;
+
+            screenTimeEntries.forEach((entry: any) => {
+                if (entry.duration >= min && entry.duration < max) {
+                    daysInRange++;
+                    const entryDate = new Date(entry.date).toDateString();
+                    // Check if migraine occurred on the same day or next day
+                    const hasMigraine = migraines.some(m => {
+                        const mDate = new Date(m.date);
+                        const diff = differenceInHours(mDate, new Date(entry.date));
+                        return diff >= 0 && diff <= 24;
+                    });
+                    if (hasMigraine) migrainesInRange++;
+                }
+            });
+
+            const percentage = daysInRange > 0 ? (migrainesInRange / daysInRange) * 100 : 0;
+            return { range, count: migrainesInRange, percentage };
         });
 
-        const migrainesWithBreaks = migrainesWithScreenData.filter(m => m.hadBreaks).length;
-        const migrainesWithoutBreaks = migrainesWithScreenData.length - migrainesWithBreaks;
+        // Breaks impact (using breakFrequency)
+        // Assume breakFrequency < 120 mins is "good"
+        let daysWithBreaks = 0;
+        let migrainesWithBreaks = 0;
+        let daysWithoutBreaks = 0;
+        let migrainesWithoutBreaks = 0;
+
+        screenTimeEntries.forEach((entry: any) => {
+            const hasGoodBreaks = entry.breakFrequency && entry.breakFrequency <= 120;
+            const entryDate = new Date(entry.date).toDateString();
+            const hasMigraine = migraines.some(m => {
+                const mDate = new Date(m.date);
+                const diff = differenceInHours(mDate, new Date(entry.date));
+                return diff >= 0 && diff <= 24;
+            });
+
+            if (hasGoodBreaks) {
+                daysWithBreaks++;
+                if (hasMigraine) migrainesWithBreaks++;
+            } else {
+                daysWithoutBreaks++;
+                if (hasMigraine) migrainesWithoutBreaks++;
+            }
+        });
+
+        const riskWithBreaks = daysWithBreaks > 0 ? (migrainesWithBreaks / daysWithBreaks) : 0;
+        const riskWithoutBreaks = daysWithoutBreaks > 0 ? (migrainesWithoutBreaks / daysWithoutBreaks) : 0;
 
         const breaksImpact: TriggerCorrelation = {
             withTrigger: migrainesWithoutBreaks,
             withoutTrigger: migrainesWithBreaks,
             averageIntensityWithTrigger: 0,
             averageIntensityWithoutTrigger: 0,
-            riskIncrease: migrainesWithBreaks > 0
-                ? ((migrainesWithoutBreaks - migrainesWithBreaks) / migrainesWithBreaks) * 100
+            riskIncrease: riskWithBreaks > 0
+                ? ((riskWithoutBreaks - riskWithBreaks) / riskWithBreaks) * 100
                 : 0
         };
 
-        const averageScreenTimeBeforeCrisis = migrainesWithScreenData.length > 0
-            ? migrainesWithScreenData.reduce((sum, m) => sum + (m.screenTimeBeforeCrisis || 0), 0) / migrainesWithScreenData.length
-            : 0;
+        const averageScreenTimeBeforeCrisis = screenTimeEntries.reduce((sum: number, e: any) => sum + e.duration, 0) / screenTimeEntries.length;
 
         return {
             riskByDuration,
             breaksImpact,
             averageScreenTimeBeforeCrisis,
-            criticalThreshold: 6 // Default threshold
+            criticalThreshold: 6
         };
     },
 

@@ -43,3 +43,9 @@ next-env.d.ts
 # OS
 Thumbs.db
 .DS_Store
+
+# Garmin Connect Sync
+.env.garmin
+garmin-data/
+.garmin/
+logs/

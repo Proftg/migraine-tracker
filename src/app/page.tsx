@@ -13,19 +13,20 @@ import { exportService } from "@/lib/export";
 import { CrisisMode } from "@/components/migraine/CrisisMode";
 import { SportsQuickEntry } from "@/components/migraine/SportsQuickEntry";
 import { DailyCalorieReminder } from "@/components/migraine/DailyCalorieReminder";
+import { ScreenTimeInput, ScreenTimeData } from "@/components/migraine/ScreenTimeInput";
 import { MedicalReport } from "@/components/migraine/MedicalReport";
 import { weatherService, WeatherData } from "@/lib/weather";
 import { riskService, RiskAssessment } from "@/lib/risk";
 import { RiskIndicator } from "@/components/migraine/RiskIndicator";
 import { predictionService, PredictionResult } from "@/lib/prediction";
 import { PredictionWidget } from "@/components/migraine/PredictionWidget";
-import { GarminCharts } from "@/components/migraine/GarminCharts";
 
 export default function Home() {
     const [entries, setEntries] = useState<JournalEntry[]>([]);
     const [inputText, setInputText] = useState("");
     const [showCrisisMode, setShowCrisisMode] = useState(false);
     const [showSportsEntry, setShowSportsEntry] = useState(false);
+    const [showScreenTimeInput, setShowScreenTimeInput] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [showCalorieReminder, setShowCalorieReminder] = useState(false);
     const [showMedicalReport, setShowMedicalReport] = useState(false);
@@ -226,6 +227,7 @@ export default function Home() {
 
     const handleCalorieLog = async (data: {
         totalCalories: number;
+        date: string;
         mealBreakdown?: {
             breakfast?: number;
             lunch?: number;
@@ -235,7 +237,7 @@ export default function Home() {
     }) => {
         const newEntry: JournalEntry = {
             id: Date.now().toString(),
-            date: new Date().toISOString(),
+            date: data.date, // Use provided date
             type: "calories",
             totalCalories: data.totalCalories,
             mealBreakdown: data.mealBreakdown,
@@ -245,6 +247,22 @@ export default function Home() {
         const updated = await storage.addEntry(newEntry);
         setEntries(updated);
         setShowCalorieReminder(false);
+    };
+
+    const handleScreenTimeLog = async (data: ScreenTimeData) => {
+        const newEntry: JournalEntry = {
+            id: Date.now().toString(),
+            date: data.date,
+            type: "screentime",
+            duration: data.duration,
+            breakFrequency: data.breakFrequency,
+            blueLightFilter: data.blueLightFilter,
+            notes: `Temps d'écran : ${data.duration}h ${data.blueLightFilter ? '(Filtre bleu activé)' : ''}`,
+            weather: getEntryWeather()
+        };
+        const updated = await storage.addEntry(newEntry);
+        setEntries(updated);
+        setShowScreenTimeInput(false);
     };
 
     const handleDelete = async (id: string) => {
@@ -444,6 +462,7 @@ export default function Home() {
                         prediction={prediction}
                         isLoading={isPredicting}
                         dataCount={entries.length}
+                        hasGarminData={prediction?.usedGarminData}
                     />
                 </div>
 
@@ -468,6 +487,16 @@ export default function Home() {
                             🏃
                         </Button>
                         <span className="text-sm font-medium text-muted-foreground">Activité Sportive</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-3">
+                        <Button
+                            onClick={() => setShowScreenTimeInput(true)}
+                            className="h-24 w-24 rounded-full shadow-lg text-4xl bg-blue-600 hover:bg-blue-700 transition-transform hover:scale-110"
+                            variant="default"
+                        >
+                            💻
+                        </Button>
+                        <span className="text-sm font-medium text-muted-foreground">Temps d'Écran</span>
                     </div>
                     <div className="flex flex-col items-center gap-3">
                         <Button
@@ -567,12 +596,9 @@ export default function Home() {
                 {/* Modals */}
                 {showCrisisMode && <CrisisMode onClose={() => setShowCrisisMode(false)} onLogCrisis={handleCrisisLog} />}
                 {showSportsEntry && <SportsQuickEntry onClose={() => setShowSportsEntry(false)} onSave={handleSportsLog} />}
+                {showScreenTimeInput && <ScreenTimeInput onClose={() => setShowScreenTimeInput(false)} onSave={handleScreenTimeLog} />}
                 {showCalorieReminder && (
-                    <Dialog open={showCalorieReminder} onOpenChange={setShowCalorieReminder}>
-                        <DialogContent>
-                            <DailyCalorieReminder onClose={() => setShowCalorieReminder(false)} onSave={handleCalorieLog} />
-                        </DialogContent>
-                    </Dialog>
+                    <DailyCalorieReminder onClose={() => setShowCalorieReminder(false)} onSave={handleCalorieLog} />
                 )}
                 {showMedicalReport && <MedicalReport entries={entries} onClose={() => setShowMedicalReport(false)} />}
             </div>

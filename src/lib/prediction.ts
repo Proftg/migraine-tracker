@@ -4,23 +4,24 @@ import { JournalEntry, MigraineEntry } from "@/types";
 import { WeatherData } from "./weather";
 
 export interface GarminData {
+    // Flat structure from new python script
+    sleep_seconds?: number;
+    sleep_score?: number;
+    stress_avg?: number;
+    resting_hr?: number;
+    steps?: number;
+    total_calories?: number;
+
+    // Legacy nested structure support (optional)
     sleep?: {
         sleep_time_seconds: number;
         sleep_score: number;
-        deep_sleep_seconds: number;
-        rem_sleep_seconds: number;
     };
     stress?: {
         average: number;
-        max: number;
     };
     heart_rate?: {
         resting_hr: number;
-        max_hr: number;
-    };
-    summary?: {
-        steps: number;
-        calories: number;
     };
 }
 
@@ -29,7 +30,10 @@ export interface PredictionResult {
     confidence: number; // 0-1 (based on amount of data)
     predictedDate: string;
     contributingFactors: string[];
+    usedGarminData?: boolean;
 }
+
+
 
 export class PredictionService {
     private model: tf.Sequential | null = null;
@@ -38,9 +42,9 @@ export class PredictionService {
     private useGarminData = false;
 
     constructor() {
-        // Enhanced model with more features (now 8 input features instead of 4)
+        // Enhanced model with more features (now 7 input features instead of 8)
         this.model = tf.sequential();
-        this.model.add(tf.layers.dense({ units: 16, activation: 'relu', inputShape: [8] }));
+        this.model.add(tf.layers.dense({ units: 16, activation: 'relu', inputShape: [7] }));
         this.model.add(tf.layers.dropout({ rate: 0.2 }));
         this.model.add(tf.layers.dense({ units: 8, activation: 'relu' }));
         this.model.add(tf.layers.dense({ units: 1, activation: 'sigmoid' }));
@@ -68,9 +72,39 @@ export class PredictionService {
     }
 
     /**
+     * Helper to extract metrics from Garmin data (handling both flat and nested structures)
+     */
+    private extractGarminMetrics(data: GarminData | null) {
+        if (!data) return { sleepHours: 0.6, sleepQuality: 0.7, stress: 0.3, hasData: false };
+
+        // Sleep Hours (Normalized 0-12 -> 0-1)
+        let sleepSeconds = data.sleep_seconds;
+        if (sleepSeconds === undefined && data.sleep?.sleep_time_seconds) {
+            sleepSeconds = data.sleep.sleep_time_seconds;
+        }
+        const sleepHours = sleepSeconds ? Math.min(sleepSeconds / (12 * 3600), 1) : 0.6;
+
+        // Sleep Quality (0-100 -> 0-1)
+        let sleepScore = data.sleep_score;
+        if (sleepScore === undefined && data.sleep?.sleep_score) {
+            sleepScore = data.sleep.sleep_score;
+        }
+        const sleepQuality = sleepScore ? sleepScore / 100 : 0.7;
+
+        // Stress level (0-100 -> 0-1)
+        let stressAvg = data.stress_avg;
+        if (stressAvg === undefined && data.stress?.average) {
+            stressAvg = data.stress.average;
+        }
+        const stress = stressAvg ? stressAvg / 100 : 0.3;
+
+        return { sleepHours, sleepQuality, stress, hasData: true };
+    }
+
+    /**
      * Prepares training data from journal entries with optional Garmin data
      * Features: [DaysSinceLastMigraine, Pressure, Temperature, YesterdayWasMigraine, 
-     *            SleepHours, SleepQuality, StressLevel, RestingHR]
+     *            SleepHours, SleepQuality, StressLevel]
      */
     private async prepareData(entries: JournalEntry[]) {
         const sortedEntries = [...entries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -89,12 +123,15 @@ export class PredictionService {
 
             // Feature 1: Days since last migraine
             let daysSinceLast = 0;
-            if (lastMigraineDate) {
+            if (lastMigraineDate && !isNaN(lastMigraineDate)) {
                 daysSinceLast = (date - lastMigraineDate) / (1000 * 60 * 60 * 24);
             }
             if (prevEntry.type === 'migraine') {
-                lastMigraineDate = new Date(prevEntry.date).getTime();
-                daysSinceLast = 0;
+                const prevDate = new Date(prevEntry.date).getTime();
+                if (!isNaN(prevDate)) {
+                    lastMigraineDate = prevDate;
+                    daysSinceLast = 0;
+                }
             }
 
             // Feature 2: Pressure (Normalized 950-1050 -> 0-1)
@@ -108,45 +145,24 @@ export class PredictionService {
 
             // Try to load Garmin data for this date
             const garminData = await this.loadGarminData(dateStr);
-
-            // Feature 5: Sleep hours (Normalized 0-12 -> 0-1)
-            let sleepHours = 0.6; // Default ~7h
-            if (garminData?.sleep) {
-                sleepHours = Math.min(garminData.sleep.sleep_time_seconds / (12 * 3600), 1);
-                garminDataAvailable = true;
-            }
-
-            // Feature 6: Sleep quality (0-100 -> 0-1)
-            let sleepQuality = 0.7; // Default good sleep
-            if (garminData?.sleep?.sleep_score) {
-                sleepQuality = garminData.sleep.sleep_score / 100;
-            }
-
-            // Feature 7: Stress level (0-100 -> 0-1)
-            let stress = 0.3; // Default low stress
-            if (garminData?.stress?.average) {
-                stress = garminData.stress.average / 100;
-            }
-
-            // Feature 8: Resting HR (Normalized 40-100 -> 0-1)
-            let restingHR = 0.5; // Default ~70 bpm
-            if (garminData?.heart_rate?.resting_hr) {
-                restingHR = (garminData.heart_rate.resting_hr - 40) / 60;
-            }
+            const metrics = this.extractGarminMetrics(garminData);
+            if (metrics.hasData) garminDataAvailable = true;
 
             // Target: Is this entry a migraine?
             const isMigraine = entry.type === 'migraine' ? 1 : 0;
 
-            xs.push([
-                daysSinceLast / 30,
-                pressure,
-                temp,
+            // Ensure no NaNs
+            const features = [
+                isNaN(daysSinceLast) ? 0 : daysSinceLast / 30,
+                isNaN(pressure) ? 0.63 : pressure,
+                isNaN(temp) ? 0.5 : temp,
                 yesterdayWasMigraine,
-                sleepHours,
-                sleepQuality,
-                stress,
-                restingHR
-            ]);
+                isNaN(metrics.sleepHours) ? 0.6 : metrics.sleepHours,
+                isNaN(metrics.sleepQuality) ? 0.7 : metrics.sleepQuality,
+                isNaN(metrics.stress) ? 0.3 : metrics.stress
+            ];
+
+            xs.push(features);
             ys.push(isMigraine);
         }
 
@@ -192,7 +208,6 @@ export class PredictionService {
         }
 
         const sortedEntries = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        const lastEntry = sortedEntries[0];
         const lastMigraine = sortedEntries.find(e => e.type === 'migraine');
 
         // Feature 1: Days since last migraine
@@ -200,7 +215,9 @@ export class PredictionService {
         if (lastMigraine) {
             const now = new Date().getTime();
             const lastDate = new Date(lastMigraine.date).getTime();
-            daysSinceLast = (now - lastDate) / (1000 * 60 * 60 * 24);
+            if (!isNaN(lastDate)) {
+                daysSinceLast = (now - lastDate) / (1000 * 60 * 60 * 24);
+            }
         }
 
         // Feature 2-3: Weather
@@ -235,22 +252,21 @@ export class PredictionService {
             }
         }
 
-        // Features 5-8: Garmin data or defaults
-        const sleepHours = garminData?.sleep ? Math.min(garminData.sleep.sleep_time_seconds / (12 * 3600), 1) : 0.6;
-        const sleepQuality = garminData?.sleep?.sleep_score ? garminData.sleep.sleep_score / 100 : 0.7;
-        const stress = garminData?.stress?.average ? garminData.stress.average / 100 : 0.3;
-        const restingHR = garminData?.heart_rate?.resting_hr ? (garminData.heart_rate.resting_hr - 40) / 60 : 0.5;
+        // Features 5-7: Garmin data or defaults
+        const metrics = this.extractGarminMetrics(garminData);
 
-        const input = tf.tensor2d([[
-            daysSinceLast / 30,
-            pressure,
-            temp,
+        // Ensure no NaNs in input
+        const features = [
+            isNaN(daysSinceLast) ? 0 : daysSinceLast / 30,
+            isNaN(pressure) ? 0.63 : pressure,
+            isNaN(temp) ? 0.5 : temp,
             isMigraineToday,
-            sleepHours,
-            sleepQuality,
-            stress,
-            restingHR
-        ]]);
+            isNaN(metrics.sleepHours) ? 0.6 : metrics.sleepHours,
+            isNaN(metrics.sleepQuality) ? 0.7 : metrics.sleepQuality,
+            isNaN(metrics.stress) ? 0.3 : metrics.stress
+        ];
+
+        const input = tf.tensor2d([features]);
 
         const prediction = this.model.predict(input) as tf.Tensor;
         const probability = (await prediction.data())[0];
@@ -264,17 +280,17 @@ export class PredictionService {
         if (pressure < 0.5) factors.push("Basse pression");
         if (isMigraineToday) factors.push("Suite de crise");
         if (garminData) {
-            if (sleepHours < 0.5) factors.push("Sommeil insuffisant");
-            if (sleepQuality < 0.6) factors.push("Mauvaise qualité de sommeil");
-            if (stress > 0.6) factors.push("Stress élevé");
-            if (restingHR > 0.7) factors.push("FC au repos élevée");
+            if (metrics.sleepHours < 0.5) factors.push("Sommeil insuffisant");
+            if (metrics.sleepQuality < 0.6) factors.push("Mauvaise qualité de sommeil");
+            if (metrics.stress > 0.6) factors.push("Stress élevé");
         }
 
         return {
-            probability,
+            probability: isNaN(probability) ? 0 : probability, // Final safety check
             confidence: Math.min(entries.length / 20, 1) * (this.useGarminData ? 1.2 : 1), // Boost confidence with Garmin data
             predictedDate: "Demain",
-            contributingFactors: factors
+            contributingFactors: factors,
+            usedGarminData: this.useGarminData
         };
     }
 

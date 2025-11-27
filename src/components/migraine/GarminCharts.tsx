@@ -152,12 +152,11 @@ export function GarminCharts() {
     // Calculate averages
     const avgSleep = Math.round(metrics.reduce((sum, m) => sum + m.sleep_score, 0) / metrics.length);
     const avgStress = Math.round(metrics.reduce((sum, m) => sum + m.stress_avg, 0) / metrics.length);
-    const avgHR = Math.round(metrics.reduce((sum, m) => sum + (m.resting_hr || 0), 0) / metrics.filter(m => m.resting_hr).length);
 
     return (
         <div className="space-y-6">
             {/* Summary Cards */}
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium">Sommeil Moyen</CardTitle>
@@ -181,17 +180,6 @@ export function GarminCharts() {
                         <p className="text-xs text-muted-foreground mt-1">
                             {avgStress <= 25 ? "Faible" : avgStress <= 50 ? "Modéré" : "Élevé"}
                         </p>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium">FC au Repos</CardTitle>
-                        <Heart className="h-4 w-4 text-pink-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{avgHR || "N/A"}</div>
-                        <p className="text-xs text-muted-foreground mt-1">bpm moyen</p>
                     </CardContent>
                 </Card>
             </div>
@@ -226,23 +214,7 @@ export function GarminCharts() {
                     </CardContent>
                 </Card>
 
-                {avgHR > 0 && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-base flex items-center gap-2">
-                                <Heart className="h-5 w-5 text-pink-600" />
-                                Fréquence Cardiaque au Repos
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="h-64">
-                                <Line data={hrData} options={chartOptions} />
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-
-                <Card>
+                <Card className="md:col-span-2">
                     <CardHeader>
                         <CardTitle className="text-base flex items-center gap-2">
                             <Activity className="h-5 w-5 text-green-600" />

@@ -1,4 +1,4 @@
-export type EntryType = 'migraine' | 'activity' | 'medication' | 'note' | 'treatment' | 'calories';
+export type EntryType = 'migraine' | 'activity' | 'medication' | 'note' | 'treatment' | 'calories' | 'screentime';
 
 export interface BaseEntry {
     id: string;
@@ -93,4 +93,12 @@ export interface NoteEntry extends BaseEntry {
     type: 'note';
 }
 
-export type JournalEntry = MigraineEntry | ActivityEntry | MedicationEntry | NoteEntry | TreatmentEntry | CalorieEntry;
+// NEW: Daily screen time entry
+export interface ScreenTimeEntry extends BaseEntry {
+    type: 'screentime';
+    duration: number;           // Hours
+    breakFrequency?: number;    // Minutes between breaks (optional)
+    blueLightFilter?: boolean;  // Used blue light filter?
+}
+
+export type JournalEntry = MigraineEntry | ActivityEntry | MedicationEntry | NoteEntry | TreatmentEntry | CalorieEntry | ScreenTimeEntry;
