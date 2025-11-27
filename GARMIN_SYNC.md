@@ -43,24 +43,25 @@ Data is saved as JSON in `garmin-data/YYYY-MM-DD.json`.
 
 ## 🤖 Automation Options
 
-### Option A: Cron Job (Linux/macOS/WSL)
+### Option A: Automatic Setup (Recommended)
 
-Add to your crontab (`crontab -e`):
+We have created a script to automatically set up the daily sync at 7:00 AM.
 
 ```bash
-# Sync yesterday's Garmin data every day at 7 AM
-0 7 * * * cd /path/to/migraine-tracker && python3 scripts/garmin-sync.py >> logs/garmin.log 2>&1
+bash scripts/install-garmin-cron.sh
+```
+
+This will:
+1. Create a wrapper script (`scripts/garmin-cron.sh`)
+2. Add a cron job to run it daily at 7:00 AM
+3. Create a log file at `logs/garmin.log`
+
+To check the logs:
+```bash
+tail -f logs/garmin.log
 ```
 
 ### Option B: Windows Task Scheduler
-
-1. Open Task Scheduler
-2. Create Basic Task
-3. Trigger: Daily at 7:00 AM
-4. Action: Start a program
-   - Program: `python`
-   - Arguments: `scripts/garmin-sync.py`
-   - Start in: `C:\path\to\migraine-tracker`
 
 ### Option C: Manual Sync
 
