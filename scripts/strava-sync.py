@@ -63,13 +63,20 @@ def sync_activities(strava_client, supabase):
             # Prepare data for Supabase
             activity_date = activity.start_date_local.isoformat()
             
+            # Handle duration (can be timedelta or int)
+            duration_minutes = 0
+            if hasattr(activity.moving_time, 'total_seconds'):
+                duration_minutes = activity.moving_time.total_seconds() / 60
+            else:
+                duration_minutes = int(activity.moving_time) / 60
+
             # Map Strava activity to our ActivityEntry structure
             entry = {
                 "id": f"strava_{activity.id}",
                 "date": activity_date,
                 "type": "activity",
                 "activityType": activity.type,
-                "duration": activity.moving_time.total_seconds() / 60, # Minutes
+                "duration": duration_minutes, # Minutes
                 "notes": f"{activity.name} (Imported from Strava)",
                 
                 # Strava specific fields (need to be supported by DB)
