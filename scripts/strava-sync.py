@@ -51,15 +51,18 @@ def setup_strava():
         sys.exit(1)
 
 def sync_activities(strava_client, supabase):
-    # Fetch activities from yesterday and today
-    after_date = datetime.now() - timedelta(days=2)
-    log(f"📥 Fetching activities since {after_date.strftime('%Y-%m-%d')}...")
+    # Fetch activities from the last 7 days
+    after_date = datetime.now() - timedelta(days=7)
+    log(f"📥 Fetching activities since {after_date.strftime('%Y-%m-%d %H:%M:%S')}...")
     
-    activities = strava_client.get_activities(after=after_date)
+    activities_list = list(strava_client.get_activities(after=after_date))
+    log(f"📊 Found {len(activities_list)} activities from Strava")
     
     count = 0
-    for activity in activities:
+    for activity in activities_list:
         try:
+            log(f"🔍 Processing: {activity.name} (ID: {activity.id}, Date: {activity.start_date_local})")
+            
             # Prepare data for Supabase
             activity_date = activity.start_date_local.isoformat()
             
@@ -75,30 +78,32 @@ def sync_activities(strava_client, supabase):
                 "id": f"strava_{activity.id}",
                 "date": activity_date,
                 "type": "activity",
-                "activityType": activity.type,
-                "duration": duration_minutes, # Minutes
+                "activityType": str(activity.type),  # Convert to string for JSON serialization
+                "duration": int(round(duration_minutes)),  # Round to integer for DB
                 "notes": f"{activity.name} (Imported from Strava)",
                 
                 # Strava specific fields (need to be supported by DB)
                 "stravaId": str(activity.id),
                 "averageHeartRate": activity.average_heartrate,
                 "maxHeartRate": activity.max_heartrate,
-                "elevationGain": float(activity.total_elevation_gain),
+                "elevationGain": float(activity.total_elevation_gain) if activity.total_elevation_gain else 0,
                 "sufferScore": activity.suffer_score,
                 
                 # Mapping to existing fields
-                "caloriesBurned": activity.kilojoules, # Approx if calories not available
-                "distance": float(activity.distance) # Meters
+                "caloriesBurned": activity.kilojoules if activity.kilojoules else 0,
+                "distance": float(activity.distance) if activity.distance else 0
             }
             
             # Insert into Supabase
             # Note: We use upsert to avoid duplicates
-            data, _ = supabase.table("journal_entries").upsert(entry).execute()
+            result = supabase.table("journal_entries").upsert(entry).execute()
             log(f"✅ Synced activity: {activity.name} ({activity.type})")
             count += 1
             
         except Exception as e:
             log(f"⚠️ Failed to sync activity {activity.id}: {e}")
+            import traceback
+            traceback.print_exc()
     
     if count == 0:
         log("ℹ️ No new activities found.")
