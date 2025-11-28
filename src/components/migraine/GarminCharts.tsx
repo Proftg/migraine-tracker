@@ -15,7 +15,8 @@ import {
     Filler
 } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
-import { Activity, Moon, Heart, Zap } from "lucide-react";
+import { Activity, Moon, Heart, Zap, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 ChartJS.register(
     CategoryScale,
@@ -153,8 +154,45 @@ export function GarminCharts() {
     const avgSleep = Math.round(metrics.reduce((sum, m) => sum + m.sleep_score, 0) / metrics.length);
     const avgStress = Math.round(metrics.reduce((sum, m) => sum + m.stress_avg, 0) / metrics.length);
 
+    const [syncing, setSyncing] = useState(false);
+
+    const handleSync = async () => {
+        setSyncing(true);
+        try {
+            const res = await fetch('/api/garmin/sync', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                // Refresh data
+                const metricsRes = await fetch('/api/garmin/metrics');
+                const metricsData = await metricsRes.json();
+                if (metricsData.success) {
+                    setMetrics(metricsData.data.reverse());
+                }
+            } else {
+                console.error('Sync error:', data);
+            }
+        } catch (e) {
+            console.error("Sync failed:", e);
+        } finally {
+            setSyncing(false);
+        }
+    };
+
     return (
         <div className="space-y-6">
+            <div className="flex justify-end">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSync}
+                    disabled={syncing}
+                    className="gap-2"
+                >
+                    <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+                    {syncing ? 'Synchronisation...' : 'Synchroniser Garmin'}
+                </Button>
+            </div>
+
             {/* Summary Cards */}
             <div className="grid gap-4 md:grid-cols-2">
                 <Card>
