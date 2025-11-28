@@ -20,6 +20,8 @@ import { riskService, RiskAssessment } from "@/lib/risk";
 import { RiskIndicator } from "@/components/migraine/RiskIndicator";
 import { predictionService, PredictionResult } from "@/lib/prediction";
 import { PredictionWidget } from "@/components/migraine/PredictionWidget";
+import { StravaWidget } from "@/components/migraine/StravaWidget";
+import { GarminCharts } from "@/components/migraine/GarminCharts";
 
 export default function Home() {
     const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -133,29 +135,44 @@ export default function Home() {
     };
 
     const handleQuickAction = async (type: "migraine" | "activity" | "medication") => {
-        let text = "";
-        switch (type) {
-            case "migraine":
-                text = "Crise signalée (Rapide)";
-                break;
-            case "activity":
-                text = "Activité sportive (Rapide)";
-                break;
-            case "medication":
-                text = "Prise de médicament (Rapide)";
-                break;
-        }
-        const newEntry: JournalEntry = {
+        let newEntry: JournalEntry;
+        const base = {
             id: Date.now().toString(),
             date: new Date().toISOString(),
-            type,
-            notes: text,
-            ...(type === "migraine" ? { intensity: 5 } : {}),
-            ...(type === "activity" ? { activityType: "Sport", duration: 30, intensity: "medium" } : {}),
-            ...(type === "medication" ? { name: "Médicament habituel", dosage: "1 dose" } : {}),
             weather: getEntryWeather()
         };
-        const updated = await storage.addEntry(newEntry);
+
+        switch (type) {
+            case "migraine":
+                newEntry = {
+                    ...base,
+                    type: "migraine",
+                    intensity: 5,
+                    notes: "Crise signalée (Rapide)"
+                };
+                break;
+            case "activity":
+                newEntry = {
+                    ...base,
+                    type: "activity",
+                    activityType: "Sport",
+                    duration: 30,
+                    intensity: "medium",
+                    notes: "Activité sportive (Rapide)"
+                };
+                break;
+            case "medication":
+                newEntry = {
+                    ...base,
+                    type: "medication",
+                    name: "Médicament habituel",
+                    dosage: "1 dose",
+                    notes: "Prise de médicament (Rapide)"
+                };
+                break;
+        }
+
+        const updated = await storage.addEntry(newEntry!);
         setEntries(updated);
         const crisisDays = await storage.getCrisisFreeDays();
         setCrisisFreeDays(crisisDays);
@@ -464,6 +481,21 @@ export default function Home() {
                         dataCount={entries.length}
                         hasGarminData={prediction?.usedGarminData}
                     />
+                </div>
+
+                {/* Integrations */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 animate-in fade-in slide-in-from-top-4 duration-500 delay-100">
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                ⌚ Données Garmin
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <GarminCharts />
+                        </CardContent>
+                    </Card>
+                    <StravaWidget />
                 </div>
 
                 {/* Quick Actions */}

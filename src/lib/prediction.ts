@@ -40,13 +40,14 @@ export class PredictionService {
     private isTraining = false;
     private minDataPoints = 5;
     private useGarminData = false;
-    private numFeatures = 11; // Updated to 11 features
+    private numFeatures = 12; // Updated to 12 features
 
     constructor() {
-        // Enhanced model with 11 input features:
+        // Enhanced model with 12 input features:
         // [DaysSinceLast, Pressure, Temp, YesterdayMigraine, 
         //  SleepHours, SleepQuality, Stress, 
-        //  ScreenTimeDuration, ScreenTimeBreaks, BlueLightFilter, DailyCalories]
+        //  ScreenTimeDuration, ScreenTimeBreaks, BlueLightFilter, DailyCalories,
+        //  PhysicalExertion]
         this.model = tf.sequential();
         this.model.add(tf.layers.dense({ units: 12, activation: 'relu', inputShape: [this.numFeatures] }));
         this.model.add(tf.layers.dropout({ rate: 0.3 }));
@@ -102,6 +103,42 @@ export class PredictionService {
             calories: entry.totalCalories || 0,
             hasData: true
         };
+    }
+
+    /**
+     * Extract physical exertion from activities (Strava or manual)
+     * Returns normalized score 0-1
+     */
+    private getPhysicalExertionForDate(entries: JournalEntry[], dateStr: string): number {
+        const activities = entries.filter(e =>
+            e.type === 'activity' &&
+            e.date.startsWith(dateStr)
+        ) as any[];
+
+        if (activities.length === 0) return 0;
+
+        // Calculate total load
+        let totalLoad = 0;
+        for (const activity of activities) {
+            // Priority 1: Strava Suffer Score (0-100+)
+            if (activity.sufferScore) {
+                totalLoad += Math.min(activity.sufferScore / 100, 1);
+            }
+            // Priority 2: Manual Intensity
+            else if (activity.intensity) {
+                switch (activity.intensity) {
+                    case 'high': totalLoad += 0.8; break;
+                    case 'medium': totalLoad += 0.5; break;
+                    case 'low': totalLoad += 0.2; break;
+                }
+            }
+            // Fallback: Duration
+            else if (activity.duration) {
+                totalLoad += Math.min(activity.duration / 60, 1) * 0.3;
+            }
+        }
+
+        return this.clamp(totalLoad);
     }
 
     /**
@@ -214,10 +251,13 @@ export class PredictionService {
             const calorieData = this.getCaloriesForDate(entries, dateStr);
             const calories = this.clamp(calorieData.calories / 3000);
 
+            // Feature 12: Physical Exertion (Normalized 0-1)
+            const physicalExertion = this.getPhysicalExertionForDate(entries, dateStr);
+
             // Target: Is this entry a migraine?
             const isMigraine = entry.type === 'migraine' ? 1 : 0;
 
-            // Build feature vector with all 11 features
+            // Build feature vector with all 12 features
             const features = [
                 this.clamp(isNaN(daysSinceLast) ? 0 : daysSinceLast / 30),
                 this.clamp(isNaN(pressure) ? 0.63 : pressure),
@@ -229,7 +269,8 @@ export class PredictionService {
                 screenDuration,
                 hasBreaks,
                 hasBlueLight,
-                calories
+                calories,
+                physicalExertion
             ];
 
             xs.push(features);
@@ -332,7 +373,10 @@ export class PredictionService {
         const calorieData = this.getCaloriesForDate(entries, today);
         const calories = this.clamp(calorieData.calories / 3000);
 
-        // Build feature vector with all 11 features
+        // Feature 12: Physical Exertion
+        const physicalExertion = this.getPhysicalExertionForDate(entries, today);
+
+        // Build feature vector with all 12 features
         const features = [
             this.clamp(isNaN(daysSinceLast) ? 0 : daysSinceLast / 30),
             this.clamp(isNaN(pressure) ? 0.63 : pressure),
@@ -344,7 +388,8 @@ export class PredictionService {
             screenDuration,
             hasBreaks,
             hasBlueLight,
-            calories
+            calories,
+            physicalExertion
         ];
 
         const input = tf.tensor2d([features]);
@@ -383,6 +428,9 @@ export class PredictionService {
             if (calorieData.calories < 1200) factors.push("Apport calorique faible");
             if (calorieData.calories > 2500) factors.push("Apport calorique élevé");
         }
+
+        // Physical Exertion factors
+        if (physicalExertion > 0.7) factors.push("Effort physique intense");
 
         return {
             probability: isNaN(probability) ? 0 : probability,

@@ -105,7 +105,6 @@ export const analytics = {
             averageDuration: migrainesWithDuration > 0 ? totalDuration / migrainesWithDuration : 0,
             mostCommonLocation,
             mostCommonSymptoms,
-            mostCommonSymptoms,
             migraineFreeDays: 0 // Will calculate based on date range
         };
     },

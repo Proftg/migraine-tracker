@@ -38,7 +38,7 @@ export function DrAIAssistant({ entries }: DrAIAssistantProps) {
         setIsOpen(true);
         setIsInitializing(true);
         try {
-            await aiAssistant.initialize((progress) => {
+            await aiAssistant.initialize((progress: any) => {
                 setInitText(progress.text);
                 // Simple heuristic to parse progress percentage if available, otherwise estimate
                 // WebLLM progress text format varies, but often contains "[x/y]" or similar
@@ -117,8 +117,8 @@ export function DrAIAssistant({ entries }: DrAIAssistantProps) {
                             {messages.map((msg, idx) => (
                                 <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                                     <div className={`max-w-[80%] rounded-lg p-3 text-sm ${msg.role === "user"
-                                            ? "bg-primary text-primary-foreground rounded-br-none"
-                                            : "bg-white border shadow-sm rounded-bl-none"
+                                        ? "bg-primary text-primary-foreground rounded-br-none"
+                                        : "bg-white border shadow-sm rounded-bl-none"
                                         }`}>
                                         {msg.content}
                                     </div>
