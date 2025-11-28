@@ -60,6 +60,13 @@ export interface ActivityEntry extends BaseEntry {
     warmupDuration?: number;           // Minutes of warmup
     cooldownDuration?: number;         // Minutes of cooldown
     perceivedExertion?: number;        // 1-10 RPE scale
+
+    // Strava specific data
+    stravaId?: string;                 // ID of the activity in Strava
+    averageHeartRate?: number;
+    maxHeartRate?: number;
+    elevationGain?: number;            // Meters
+    sufferScore?: number;              // Strava Relative Effort
 }
 
 export interface MedicationEntry extends BaseEntry {
