@@ -89,24 +89,51 @@ export function StravaWidget() {
                 ) : (
                     <div className="space-y-4">
                         {activities.slice(0, 3).map((activity) => (
-                            <div key={activity.id} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
-                                <div className="space-y-1">
-                                    <p className="text-sm font-medium leading-none">
-                                        {activity.activityType}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {format(new Date(activity.date), "d MMMM à HH:mm", { locale: fr })}
-                                    </p>
-                                </div>
-                                <div className="flex items-center gap-3 text-sm">
-                                    <div className="flex flex-col items-end">
-                                        <span className="font-bold">{Math.round(activity.duration)} min</span>
-                                        {activity.sufferScore && (
-                                            <span className="text-xs text-red-500 flex items-center gap-0.5">
-                                                <Flame className="h-3 w-3" /> {activity.sufferScore}
-                                            </span>
-                                        )}
+                            <div key={activity.id} className="border-b pb-3 last:border-0 last:pb-0">
+                                <div className="flex items-start justify-between mb-2">
+                                    <div className="space-y-1 flex-1">
+                                        <p className="text-sm font-medium leading-none">
+                                            {activity.activityType}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {format(new Date(activity.date), "d MMMM à HH:mm", { locale: fr })}
+                                        </p>
                                     </div>
+                                    <div className="text-right">
+                                        <span className="text-sm font-bold">{Math.round(activity.duration)} min</span>
+                                    </div>
+                                </div>
+
+                                {/* Metrics Grid */}
+                                <div className="grid grid-cols-2 gap-2 mt-2">
+                                    {activity.sufferScore && (
+                                        <div className="flex items-center gap-1 text-xs">
+                                            <Flame className="h-3 w-3 text-orange-500" />
+                                            <span className="text-muted-foreground">Charge:</span>
+                                            <span className="font-semibold">{activity.sufferScore}</span>
+                                        </div>
+                                    )}
+                                    {activity.averageHeartRate && (
+                                        <div className="flex items-center gap-1 text-xs">
+                                            <Heart className="h-3 w-3 text-red-500" />
+                                            <span className="text-muted-foreground">FC moy:</span>
+                                            <span className="font-semibold">{activity.averageHeartRate}</span>
+                                        </div>
+                                    )}
+                                    {activity.elevationGain && activity.elevationGain > 0 && (
+                                        <div className="flex items-center gap-1 text-xs">
+                                            <Mountain className="h-3 w-3 text-green-600" />
+                                            <span className="text-muted-foreground">D+:</span>
+                                            <span className="font-semibold">{activity.elevationGain}m</span>
+                                        </div>
+                                    )}
+                                    {activity.distance && activity.distance > 0 && (
+                                        <div className="flex items-center gap-1 text-xs">
+                                            <Activity className="h-3 w-3 text-blue-500" />
+                                            <span className="text-muted-foreground">Dist:</span>
+                                            <span className="font-semibold">{(activity.distance / 1000).toFixed(1)}km</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))}

@@ -74,24 +74,56 @@ def sync_activities(strava_client, supabase):
                 duration_minutes = int(activity.moving_time) / 60
 
             # Map Strava activity to our ActivityEntry structure
+            # Extract clean activity type (handle both string and object types)
+            activity_type_str = str(activity.type)
+            if "root=" in activity_type_str:
+                # Extract from format like "root='WeightTraining'"
+                activity_type_clean = activity_type_str.split("'")[1] if "'" in activity_type_str else activity_type_str
+            else:
+                activity_type_clean = activity_type_str
+            
+            # Map Strava types to French names
+            type_mapping = {
+                'WeightTraining': 'Musculation',
+                'Run': 'Course à pieds',
+                'Ride': 'Vélo',
+                'VirtualRun': 'Course virtuelle',
+                'VirtualRide': 'Vélo virtuel',
+                'Swim': 'Natation',
+                'Walk': 'Marche',
+                'Hike': 'Randonnée'
+            }
+            activity_type_display = type_mapping.get(activity_type_clean, activity_type_clean)
+            
+            # Determine intensity based on suffer score
+            intensity = None
+            if activity.suffer_score:
+                if activity.suffer_score > 80:
+                    intensity = 'high'
+                elif activity.suffer_score > 40:
+                    intensity = 'medium'
+                else:
+                    intensity = 'low'
+            
             entry = {
                 "id": f"strava_{activity.id}",
                 "date": activity_date,
                 "type": "activity",
-                "activityType": str(activity.type),  # Convert to string for JSON serialization
-                "duration": int(round(duration_minutes)),  # Round to integer for DB
-                "notes": f"{activity.name} (Imported from Strava)",
+                "activityType": activity_type_display,
+                "duration": int(round(duration_minutes)),
+                "intensity": intensity,
+                "notes": f"{activity.name} (Strava)",
                 
-                # Strava specific fields (need to be supported by DB)
+                # Strava specific fields
                 "stravaId": str(activity.id),
-                "averageHeartRate": activity.average_heartrate,
-                "maxHeartRate": activity.max_heartrate,
-                "elevationGain": float(activity.total_elevation_gain) if activity.total_elevation_gain else 0,
-                "sufferScore": activity.suffer_score,
+                "averageHeartRate": int(activity.average_heartrate) if activity.average_heartrate else None,
+                "maxHeartRate": int(activity.max_heartrate) if activity.max_heartrate else None,
+                "elevationGain": int(activity.total_elevation_gain) if activity.total_elevation_gain else None,
+                "sufferScore": int(activity.suffer_score) if activity.suffer_score else None,
                 
                 # Mapping to existing fields
-                "caloriesBurned": activity.kilojoules if activity.kilojoules else 0,
-                "distance": float(activity.distance) if activity.distance else 0
+                "caloriesBurned": int(activity.kilojoules) if activity.kilojoules else None,
+                "distance": float(activity.distance) if activity.distance else None
             }
             
             # Insert into Supabase
