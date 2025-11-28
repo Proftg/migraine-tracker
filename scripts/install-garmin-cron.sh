@@ -15,9 +15,9 @@ if crontab -l 2>/dev/null | grep -q "garmin-cron.sh"; then
 fi
 
 # Add new cron job
-echo "📝 Adding cron job: Daily sync at 7:00 AM..."
-(crontab -l 2>/dev/null; echo "# Garmin Connect Data Sync - Daily at 7 AM") | crontab -
-(crontab -l 2>/dev/null; echo "0 7 * * * $PROJECT_DIR/scripts/garmin-cron.sh") | crontab -
+echo "📝 Adding cron job: Daily sync at 11:00 AM..."
+(crontab -l 2>/dev/null; echo "# Garmin Connect Data Sync - Daily at 11 AM") | crontab -
+(crontab -l 2>/dev/null; echo "0 11 * * * $PROJECT_DIR/scripts/garmin-cron.sh") | crontab -
 
 echo ""
 echo "✅ Cron job installed successfully!"
@@ -25,7 +25,7 @@ echo ""
 echo "📋 Current crontab:"
 crontab -l | grep -A1 "Garmin"
 echo ""
-echo "📊 The script will run every day at 7:00 AM"
+echo "📊 The script will run every day at 11:00 AM"
 echo "📁 Logs will be saved to: $PROJECT_DIR/logs/garmin.log"
 echo ""
 echo "🧪 To test the sync manually, run:"

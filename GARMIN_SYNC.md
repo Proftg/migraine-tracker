@@ -45,7 +45,7 @@ Data is saved as JSON in `garmin-data/YYYY-MM-DD.json`.
 
 ### Option A: Automatic Setup (Recommended)
 
-We have created a script to automatically set up the daily sync at 7:00 AM.
+We have created a script to automatically set up the daily sync at 11:00 AM.
 
 ```bash
 bash scripts/install-garmin-cron.sh
@@ -53,7 +53,7 @@ bash scripts/install-garmin-cron.sh
 
 This will:
 1. Create a wrapper script (`scripts/garmin-cron.sh`)
-2. Add a cron job to run it daily at 7:00 AM
+2. Add a cron job to run it daily at 11:00 AM
 3. Create a log file at `logs/garmin.log`
 
 To check the logs:
