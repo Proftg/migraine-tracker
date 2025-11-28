@@ -672,5 +672,143 @@ export const analytics = {
             burnCorrelation,
             netCalorieImpact
         };
+    },
+
+    // Strava Training Load Analysis
+    getStravaAnalysis: (entries: JournalEntry[]) => {
+        const activities = entries.filter(e => e.type === 'activity') as ActivityEntry[];
+        const migraines = entries.filter(e => e.type === 'migraine') as MigraineEntry[];
+
+        // Group activities by date
+        const activitiesByDate = new Map<string, ActivityEntry[]>();
+        activities.forEach(activity => {
+            const dateKey = activity.date.split('T')[0];
+            if (!activitiesByDate.has(dateKey)) {
+                activitiesByDate.set(dateKey, []);
+            }
+            activitiesByDate.get(dateKey)!.push(activity);
+        });
+
+        // Calculate suffer score evolution
+        const sufferScoreEvolution: { date: string; score: number; hasMigraine: boolean }[] = [];
+        activitiesByDate.forEach((dayActivities, dateKey) => {
+            const totalSufferScore = dayActivities.reduce((sum, a) =>
+                sum + (a.sufferScore || 0), 0
+            );
+            const hasMigraine = migraines.some(m => m.date.startsWith(dateKey));
+
+            if (totalSufferScore > 0) {
+                sufferScoreEvolution.push({
+                    date: dateKey,
+                    score: totalSufferScore,
+                    hasMigraine
+                });
+            }
+        });
+
+        // Correlation between suffer score and migraines
+        const scoreRanges = [
+            { range: '0-40 (Léger)', min: 0, max: 40 },
+            { range: '40-80 (Modéré)', min: 40, max: 80 },
+            { range: '80-120 (Intense)', min: 80, max: 120 },
+            { range: '120+ (Très intense)', min: 120, max: 999 }
+        ];
+
+        const correlationByIntensity = scoreRanges.map(({ range, min, max }) => {
+            const activitiesInRange = sufferScoreEvolution.filter(
+                a => a.score >= min && a.score < max
+            );
+            const migrainesInRange = activitiesInRange.filter(a => a.hasMigraine).length;
+
+            return {
+                range,
+                totalActivities: activitiesInRange.length,
+                migrainesAfter: migrainesInRange,
+                riskPercentage: activitiesInRange.length > 0
+                    ? (migrainesInRange / activitiesInRange.length) * 100
+                    : 0
+            };
+        });
+
+        // Average suffer score on migraine days vs normal days
+        const migraineDates = new Set(migraines.map(m => m.date.split('T')[0]));
+        const scoresOnMigraineDays: number[] = [];
+        const scoresOnNormalDays: number[] = [];
+
+        sufferScoreEvolution.forEach(({ date, score }) => {
+            if (migraineDates.has(date)) {
+                scoresOnMigraineDays.push(score);
+            } else {
+                scoresOnNormalDays.push(score);
+            }
+        });
+
+        const avgScoreOnMigraineDays = scoresOnMigraineDays.length > 0
+            ? scoresOnMigraineDays.reduce((a, b) => a + b, 0) / scoresOnMigraineDays.length
+            : 0;
+
+        const avgScoreOnNormalDays = scoresOnNormalDays.length > 0
+            ? scoresOnNormalDays.reduce((a, b) => a + b, 0) / scoresOnNormalDays.length
+            : 0;
+
+        return {
+            sufferScoreEvolution,
+            correlationByIntensity,
+            avgScoreOnMigraineDays,
+            avgScoreOnNormalDays,
+            totalActivities: activities.length,
+            activitiesWithSufferScore: activities.filter(a => a.sufferScore).length
+        };
+    },
+
+    // Garmin Health Metrics Analysis
+    getGarminHealthAnalysis: async () => {
+        try {
+            const response = await fetch('/api/garmin/metrics');
+            const data = await response.json();
+
+            if (!data.success || !data.data) {
+                return null;
+            }
+
+            const metrics = data.data;
+
+            // Calculate averages
+            const avgSleepScore = metrics.reduce((sum: number, m: any) =>
+                sum + (m.sleep_score || 0), 0) / metrics.length;
+
+            const avgSleepHours = metrics.reduce((sum: number, m: any) =>
+                sum + ((m.sleep_seconds || 0) / 3600), 0) / metrics.length;
+
+            const avgStress = metrics.reduce((sum: number, m: any) =>
+                sum + (m.stress_avg || 0), 0) / metrics.length;
+
+            const avgRestingHR = metrics.reduce((sum: number, m: any) =>
+                sum + (m.resting_hr || 0), 0) / metrics.length;
+
+            // Trends (last 7 days vs previous 7 days)
+            const recent = metrics.slice(-7);
+            const previous = metrics.slice(-14, -7);
+
+            const recentAvgSleep = recent.reduce((sum: number, m: any) =>
+                sum + (m.sleep_score || 0), 0) / recent.length;
+            const previousAvgSleep = previous.reduce((sum: number, m: any) =>
+                sum + (m.sleep_score || 0), 0) / previous.length;
+
+            const sleepTrend = recentAvgSleep - previousAvgSleep;
+
+            return {
+                avgSleepScore,
+                avgSleepHours,
+                avgStress,
+                avgRestingHR,
+                sleepTrend,
+                dataPoints: metrics.length,
+                latestDate: metrics[metrics.length - 1]?.date
+            };
+        } catch (error) {
+            console.error('Error fetching Garmin analysis:', error);
+            return null;
+        }
     }
 };

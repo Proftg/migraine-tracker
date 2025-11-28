@@ -11,6 +11,7 @@ import { SportsAnalysisChart } from "@/components/charts/SportsAnalysisChart";
 import { BeforeAfterChart } from "@/components/charts/BeforeAfterChart";
 import { CalorieCorrelationChart } from "@/components/charts/CalorieCorrelationChart";
 import { GarminCharts } from "@/components/migraine/GarminCharts";
+import { HealthMetricsReport } from "@/components/migraine/HealthMetricsReport";
 import { subDays, subMonths, format } from "date-fns";
 
 interface MedicalReportProps {
@@ -395,18 +396,8 @@ export function MedicalReport({ entries, onClose }: MedicalReportProps) {
                     </Card>
                 )}
 
-                {/* Garmin Health Data */}
-                <Card className="mb-8">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            ⌚ Données de Santé Garmin
-                        </CardTitle>
-                        <CardDescription>Analyse du sommeil et du stress</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <GarminCharts />
-                    </CardContent>
-                </Card>
+                {/* Health Metrics (Strava & Garmin) */}
+                <HealthMetricsReport entries={filteredEntries} />
 
                 {/* Key Insights */}
                 <Card className="mb-8">
