@@ -43,6 +43,7 @@ interface GarminMetric {
 export function GarminCharts() {
     const [metrics, setMetrics] = useState<GarminMetric[]>([]);
     const [loading, setLoading] = useState(true);
+    const [syncing, setSyncing] = useState(false);
 
     useEffect(() => {
         fetch('/api/garmin/metrics')
@@ -58,6 +59,28 @@ export function GarminCharts() {
                 setLoading(false);
             });
     }, []);
+
+    const handleSync = async () => {
+        setSyncing(true);
+        try {
+            const res = await fetch('/api/garmin/sync', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                // Refresh data
+                const metricsRes = await fetch('/api/garmin/metrics');
+                const metricsData = await metricsRes.json();
+                if (metricsData.success) {
+                    setMetrics(metricsData.data.reverse());
+                }
+            } else {
+                console.error('Sync error:', data);
+            }
+        } catch (e) {
+            console.error("Sync failed:", e);
+        } finally {
+            setSyncing(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -78,7 +101,16 @@ export function GarminCharts() {
                 <CardContent className="py-12 text-center text-muted-foreground">
                     <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>Aucune donnée Garmin disponible.</p>
-                    <p className="text-sm mt-2">Exécutez le script de synchronisation pour importer vos données.</p>
+                    <p className="text-sm mt-2 mb-4">Exécutez la synchronisation pour importer vos données.</p>
+                    <Button
+                        variant="outline"
+                        onClick={handleSync}
+                        disabled={syncing}
+                        className="gap-2"
+                    >
+                        <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+                        {syncing ? 'Synchronisation...' : 'Synchroniser maintenant'}
+                    </Button>
                 </CardContent>
             </Card>
         );
@@ -153,30 +185,6 @@ export function GarminCharts() {
     // Calculate averages
     const avgSleep = Math.round(metrics.reduce((sum, m) => sum + m.sleep_score, 0) / metrics.length);
     const avgStress = Math.round(metrics.reduce((sum, m) => sum + m.stress_avg, 0) / metrics.length);
-
-    const [syncing, setSyncing] = useState(false);
-
-    const handleSync = async () => {
-        setSyncing(true);
-        try {
-            const res = await fetch('/api/garmin/sync', { method: 'POST' });
-            const data = await res.json();
-            if (data.success) {
-                // Refresh data
-                const metricsRes = await fetch('/api/garmin/metrics');
-                const metricsData = await metricsRes.json();
-                if (metricsData.success) {
-                    setMetrics(metricsData.data.reverse());
-                }
-            } else {
-                console.error('Sync error:', data);
-            }
-        } catch (e) {
-            console.error("Sync failed:", e);
-        } finally {
-            setSyncing(false);
-        }
-    };
 
     return (
         <div className="space-y-6">
