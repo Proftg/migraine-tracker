@@ -336,10 +336,10 @@ export function DataPage({ onClose }: DataPageProps) {
                                                     <td className="p-2 whitespace-nowrap">
                                                         {format(new Date(data.date), 'dd/MM/yyyy', { locale: fr })}
                                                     </td>
-                                                    <td className="p-2 font-medium">{data.sleepScore}</td>
-                                                    <td className="p-2">{data.avgStress}</td>
-                                                    <td className="p-2">{data.restingHeartRate} bpm</td>
-                                                    <td className="p-2">{data.sleepDurationHours?.toFixed(1)}h</td>
+                                                    <td className="p-2 font-medium">{data.sleepScore ?? '-'}</td>
+                                                    <td className="p-2">{data.avgStress ?? '-'}</td>
+                                                    <td className="p-2">{data.restingHeartRate ? `${data.restingHeartRate} bpm` : '-'}</td>
+                                                    <td className="p-2">{data.sleepDurationHours ? `${data.sleepDurationHours.toFixed(1)}h` : '-'}</td>
                                                 </tr>
                                             ))}
                                             {garminData.length === 0 && (
@@ -387,11 +387,11 @@ export function DataPage({ onClose }: DataPageProps) {
                                                     <td className="p-2 whitespace-nowrap">
                                                         {format(new Date(activity.start_date), 'dd/MM/yyyy HH:mm', { locale: fr })}
                                                     </td>
-                                                    <td className="p-2 font-medium">{activity.name}</td>
-                                                    <td className="p-2">{(activity.moving_time / 60).toFixed(0)} min</td>
-                                                    <td className="p-2">{(activity.distance / 1000).toFixed(2)} km</td>
+                                                    <td className="p-2 font-medium">{activity.name || '-'}</td>
+                                                    <td className="p-2">{activity.moving_time ? `${(activity.moving_time / 60).toFixed(0)} min` : '-'}</td>
+                                                    <td className="p-2">{activity.distance ? `${(activity.distance / 1000).toFixed(2)} km` : '-'}</td>
                                                     <td className="p-2">{activity.average_heartrate ? `${activity.average_heartrate.toFixed(0)} bpm` : '-'}</td>
-                                                    <td className="p-2">{activity.suffer_score || '-'}</td>
+                                                    <td className="p-2">{activity.suffer_score ?? '-'}</td>
                                                 </tr>
                                             ))}
                                             {stravaData.length === 0 && (
