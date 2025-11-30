@@ -10,7 +10,6 @@ import { ScreenTimeChart } from "@/components/charts/ScreenTimeChart";
 import { SportsAnalysisChart } from "@/components/charts/SportsAnalysisChart";
 import { BeforeAfterChart } from "@/components/charts/BeforeAfterChart";
 import { CalorieCorrelationChart } from "@/components/charts/CalorieCorrelationChart";
-import { GarminCharts } from "@/components/migraine/GarminCharts";
 import { HealthMetricsReport } from "@/components/migraine/HealthMetricsReport";
 import { subDays, subMonths, format } from "date-fns";
 
