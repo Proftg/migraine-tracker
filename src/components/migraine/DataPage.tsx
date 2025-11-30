@@ -71,21 +71,22 @@ export function DataPage({ onClose }: DataPageProps) {
         const rows = entries
             .filter(e => selectedTypes.includes(e.type))
             .map(entry => {
+                const e = entry as any;
                 const garminForDate = garminData.find(g =>
-                    format(new Date(g.date), 'yyyy-MM-dd') === format(new Date(entry.date), 'yyyy-MM-dd')
+                    format(new Date(g.date), 'yyyy-MM-dd') === format(new Date(e.date), 'yyyy-MM-dd')
                 );
 
                 return [
-                    format(new Date(entry.date), 'dd/MM/yyyy HH:mm', { locale: fr }),
-                    entry.type,
-                    (entry as any).intensity || '',
-                    entry.duration || '',
-                    entry.notes || '',
-                    entry.weather?.temperature || '',
-                    entry.weather?.pressure || '',
-                    entry.weather?.humidity || '',
-                    (entry as any).totalCalories || (entry as any).caloriesBurned || '',
-                    (entry as any).averageHeartRate || '',
+                    format(new Date(e.date), 'dd/MM/yyyy HH:mm', { locale: fr }),
+                    e.type,
+                    e.intensity || '',
+                    e.duration || '',
+                    e.notes || '',
+                    e.weather?.temperature ?? '',
+                    e.weather?.pressure ?? '',
+                    e.weather?.humidity ?? '',
+                    e.totalCalories || e.caloriesBurned || '',
+                    e.averageHeartRate || '',
                     garminForDate?.avgStress || '',
                     garminForDate?.sleepScore || ''
                 ].join(',');
@@ -105,21 +106,22 @@ export function DataPage({ onClose }: DataPageProps) {
         const data = entries
             .filter(e => selectedTypes.includes(e.type))
             .map(entry => {
+                const e = entry as any;
                 const garminForDate = garminData.find(g =>
-                    format(new Date(g.date), 'yyyy-MM-dd') === format(new Date(entry.date), 'yyyy-MM-dd')
+                    format(new Date(g.date), 'yyyy-MM-dd') === format(new Date(e.date), 'yyyy-MM-dd')
                 );
 
                 return {
-                    Date: format(new Date(entry.date), 'dd/MM/yyyy HH:mm', { locale: fr }),
-                    Type: entry.type,
-                    Intensité: (entry as any).intensity || '',
-                    'Durée (min)': entry.duration || '',
-                    Notes: entry.notes || '',
-                    'Température (°C)': entry.weather?.temperature || '',
-                    'Pression (hPa)': entry.weather?.pressure || '',
-                    'Humidité (%)': entry.weather?.humidity || '',
-                    Calories: (entry as any).totalCalories || (entry as any).caloriesBurned || '',
-                    'FC Moyenne': (entry as any).averageHeartRate || '',
+                    Date: format(new Date(e.date), 'dd/MM/yyyy HH:mm', { locale: fr }),
+                    Type: e.type,
+                    Intensité: e.intensity || '',
+                    'Durée (min)': e.duration || '',
+                    Notes: e.notes || '',
+                    'Température (°C)': e.weather?.temperature ?? '',
+                    'Pression (hPa)': e.weather?.pressure ?? '',
+                    'Humidité (%)': e.weather?.humidity ?? '',
+                    Calories: e.totalCalories || e.caloriesBurned || '',
+                    'FC Moyenne': e.averageHeartRate || '',
                     Stress: garminForDate?.avgStress || '',
                     'Score Sommeil': garminForDate?.sleepScore || ''
                 };
@@ -250,30 +252,31 @@ export function DataPage({ onClose }: DataPageProps) {
                                 </thead>
                                 <tbody>
                                     {filteredEntries.slice(0, 100).map((entry) => {
+                                        const e = entry as any;
                                         const garminForDate = garminData.find(g =>
-                                            format(new Date(g.date), 'yyyy-MM-dd') === format(new Date(entry.date), 'yyyy-MM-dd')
+                                            format(new Date(g.date), 'yyyy-MM-dd') === format(new Date(e.date), 'yyyy-MM-dd')
                                         );
 
                                         return (
-                                            <tr key={entry.id} className="border-b hover:bg-muted/50">
+                                            <tr key={e.id} className="border-b hover:bg-muted/50">
                                                 <td className="p-2 whitespace-nowrap">
-                                                    {format(new Date(entry.date), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                                                    {format(new Date(e.date), 'dd/MM/yyyy HH:mm', { locale: fr })}
                                                 </td>
                                                 <td className="p-2">
                                                     <span className="px-2 py-1 rounded text-xs bg-primary/20">
-                                                        {entry.type}
+                                                        {e.type}
                                                     </span>
                                                 </td>
                                                 <td className="p-2">
-                                                    {entry.type === 'migraine' && `Intensité: ${(entry as any).intensity}/10`}
-                                                    {entry.type === 'activity' && `${entry.duration}min - ${(entry as any).intensity}`}
-                                                    {entry.type === 'calories' && `${(entry as any).totalCalories} kcal`}
-                                                    {entry.type === 'screentime' && `${entry.duration}h`}
+                                                    {e.type === 'migraine' && `Intensité: ${e.intensity}/10`}
+                                                    {e.type === 'activity' && `${e.duration}min - ${e.intensity}`}
+                                                    {e.type === 'calories' && `${e.totalCalories} kcal`}
+                                                    {e.type === 'screentime' && `${e.duration}h`}
                                                 </td>
                                                 <td className="p-2 text-xs">
-                                                    {entry.weather && (
+                                                    {e.weather && (
                                                         <div>
-                                                            {entry.weather.temperature}°C, {entry.weather.pressure}hPa
+                                                            {e.weather.temperature}°C, {e.weather.pressure}hPa
                                                         </div>
                                                     )}
                                                 </td>
