@@ -1,0 +1,44 @@
+name: migraine_tracker
+description: "Application de suivi des migraines avec dashboard interactif et analytics"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Base de données locale NoSQL haute performance
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
+  path_provider: ^2.1.4
+  
+  # Internationalisation
+  intl: ^0.20.2
+  
+  # Graphiques et visualisation (pour Phase 2)
+  fl_chart: ^0.69.0
+  
+  # Export PDF (pour Phase 2)
+  pdf: ^3.11.1
+  
+  # Export Excel (pour Phase 2)  
+  excel: ^4.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Générateur de code Isar
+  isar_generator: ^3.1.0+1
+  build_runner: ^2.4.12
+
+  # Linting
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
