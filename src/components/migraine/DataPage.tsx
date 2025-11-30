@@ -25,6 +25,18 @@ export function DataPage({ onClose }: DataPageProps) {
         "migraine", "activity", "medication", "treatment", "calories", "screentime"
     ]);
 
+    // Helper function to safely format dates
+    const safeFormatDate = (dateValue: any, formatStr: string) => {
+        try {
+            if (!dateValue) return '-';
+            const date = new Date(dateValue);
+            if (isNaN(date.getTime())) return '-';
+            return format(date, formatStr, { locale: fr });
+        } catch {
+            return '-';
+        }
+    };
+
     useEffect(() => {
         loadAllData();
     }, []);
@@ -113,12 +125,13 @@ export function DataPage({ onClose }: DataPageProps) {
             .filter(e => selectedTypes.includes(e.type))
             .map(entry => {
                 const e = entry as any;
+                const entryDateStr = safeFormatDate(e.date, 'yyyy-MM-dd');
                 const garminForDate = garminData.find(g =>
-                    format(new Date(g.date), 'yyyy-MM-dd') === format(new Date(e.date), 'yyyy-MM-dd')
+                    safeFormatDate(g.date, 'yyyy-MM-dd') === entryDateStr
                 );
 
                 return [
-                    format(new Date(e.date), 'dd/MM/yyyy HH:mm', { locale: fr }),
+                    safeFormatDate(e.date, 'dd/MM/yyyy HH:mm'),
                     e.type,
                     e.intensity || '',
                     e.duration || '',
@@ -148,12 +161,13 @@ export function DataPage({ onClose }: DataPageProps) {
             .filter(e => selectedTypes.includes(e.type))
             .map(entry => {
                 const e = entry as any;
+                const entryDateStr = safeFormatDate(e.date, 'yyyy-MM-dd');
                 const garminForDate = garminData.find(g =>
-                    format(new Date(g.date), 'yyyy-MM-dd') === format(new Date(e.date), 'yyyy-MM-dd')
+                    safeFormatDate(g.date, 'yyyy-MM-dd') === entryDateStr
                 );
 
                 return {
-                    Date: format(new Date(e.date), 'dd/MM/yyyy HH:mm', { locale: fr }),
+                    Date: safeFormatDate(e.date, 'dd/MM/yyyy HH:mm'),
                     Type: e.type,
                     Intensité: e.intensity || '',
                     'Durée (min)': e.duration || '',
@@ -276,7 +290,7 @@ export function DataPage({ onClose }: DataPageProps) {
                                                 return (
                                                     <tr key={e.id} className="border-b hover:bg-muted/50">
                                                         <td className="p-2 whitespace-nowrap">
-                                                            {format(new Date(e.date), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                                                            {safeFormatDate(e.date, 'dd/MM/yyyy HH:mm')}
                                                         </td>
                                                         <td className="p-2">
                                                             <span className="px-2 py-1 rounded text-xs bg-primary/20">
@@ -334,7 +348,7 @@ export function DataPage({ onClose }: DataPageProps) {
                                             {garminData.map((data, i) => (
                                                 <tr key={i} className="border-b hover:bg-muted/50">
                                                     <td className="p-2 whitespace-nowrap">
-                                                        {format(new Date(data.date), 'dd/MM/yyyy', { locale: fr })}
+                                                        {safeFormatDate(data.date, 'dd/MM/yyyy')}
                                                     </td>
                                                     <td className="p-2 font-medium">{data.sleepScore ?? '-'}</td>
                                                     <td className="p-2">{data.avgStress ?? '-'}</td>
@@ -385,7 +399,7 @@ export function DataPage({ onClose }: DataPageProps) {
                                             {stravaData.map((activity, i) => (
                                                 <tr key={i} className="border-b hover:bg-muted/50">
                                                     <td className="p-2 whitespace-nowrap">
-                                                        {format(new Date(activity.start_date), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                                                        {safeFormatDate(activity.start_date, 'dd/MM/yyyy HH:mm')}
                                                     </td>
                                                     <td className="p-2 font-medium">{activity.name || '-'}</td>
                                                     <td className="p-2">{activity.moving_time ? `${(activity.moving_time / 60).toFixed(0)} min` : '-'}</td>
