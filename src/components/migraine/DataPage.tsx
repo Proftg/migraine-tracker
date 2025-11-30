@@ -2,12 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { X, FileDown, Filter } from "lucide-react";
+import { X, FileDown, Filter, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { storage } from "@/lib/storage";
 import { JournalEntry } from "@/types";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface DataPageProps {
     onClose: () => void;
@@ -18,6 +19,8 @@ export function DataPage({ onClose }: DataPageProps) {
     const [garminData, setGarminData] = useState<any[]>([]);
     const [stravaData, setStravaData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [syncingGarmin, setSyncingGarmin] = useState(false);
+    const [syncingStrava, setSyncingStrava] = useState(false);
     const [selectedTypes, setSelectedTypes] = useState<string[]>([
         "migraine", "activity", "medication", "treatment", "calories", "screentime"
     ]);
@@ -49,6 +52,44 @@ export function DataPage({ onClose }: DataPageProps) {
             console.error("Error loading data:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSyncGarmin = async () => {
+        setSyncingGarmin(true);
+        try {
+            const res = await fetch('/api/garmin/sync', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                alert('✅ Synchronisation Garmin réussie !');
+                loadAllData();
+            } else {
+                alert('❌ Erreur lors de la synchronisation Garmin');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('❌ Erreur réseau');
+        } finally {
+            setSyncingGarmin(false);
+        }
+    };
+
+    const handleSyncStrava = async () => {
+        setSyncingStrava(true);
+        try {
+            const res = await fetch('/api/strava/sync', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                alert('✅ Synchronisation Strava réussie !');
+                loadAllData();
+            } else {
+                alert('❌ Erreur lors de la synchronisation Strava');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('❌ Erreur réseau');
+        } finally {
+            setSyncingStrava(false);
         }
     };
 
@@ -171,135 +212,202 @@ export function DataPage({ onClose }: DataPageProps) {
                     </div>
                 </div>
 
-                {/* Filters */}
-                <Card className="mb-8">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Filter className="h-5 w-5" />
-                            Filtres de Données
-                        </CardTitle>
-                        <CardDescription>Sélectionnez les types de données à afficher et exporter</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex flex-wrap gap-2">
-                            {[
-                                { type: 'migraine', label: '🤕 Migraines', color: 'bg-red-500' },
-                                { type: 'activity', label: '🏃 Activités', color: 'bg-green-500' },
-                                { type: 'medication', label: '💊 Médicaments', color: 'bg-blue-500' },
-                                { type: 'treatment', label: '💉 Traitements', color: 'bg-purple-500' },
-                                { type: 'calories', label: '🍎 Calories', color: 'bg-yellow-500' },
-                                { type: 'screentime', label: '💻 Temps d\'écran', color: 'bg-cyan-500' }
-                            ].map(({ type, label, color }) => (
-                                <Button
-                                    key={type}
-                                    variant={selectedTypes.includes(type) ? 'default' : 'outline'}
-                                    size="sm"
-                                    onClick={() => toggleType(type)}
-                                    className={selectedTypes.includes(type) ? color : ''}
-                                >
-                                    {label}
-                                </Button>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
+                <Tabs defaultValue="journal" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3 mb-8">
+                        <TabsTrigger value="journal">Journal & Météo</TabsTrigger>
+                        <TabsTrigger value="garmin">Garmin Health</TabsTrigger>
+                        <TabsTrigger value="strava">Strava Activities</TabsTrigger>
+                    </TabsList>
 
-                {/* Summary Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <Card>
-                        <CardContent className="p-4 text-center">
-                            <div className="text-3xl font-bold text-primary">{entries.length}</div>
-                            <div className="text-sm text-muted-foreground">Entrées Journal</div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-4 text-center">
-                            <div className="text-3xl font-bold text-primary">{garminData.length}</div>
-                            <div className="text-sm text-muted-foreground">Données Garmin</div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-4 text-center">
-                            <div className="text-3xl font-bold text-primary">{stravaData.length}</div>
-                            <div className="text-sm text-muted-foreground">Activités Strava</div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-4 text-center">
-                            <div className="text-3xl font-bold text-primary">{filteredEntries.length}</div>
-                            <div className="text-sm text-muted-foreground">Données Filtrées</div>
-                        </CardContent>
-                    </Card>
-                </div>
+                    <TabsContent value="journal">
+                        {/* Filters */}
+                        <Card className="mb-8">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Filter className="h-5 w-5" />
+                                    Filtres de Données
+                                </CardTitle>
+                                <CardDescription>Sélectionnez les types de données à afficher</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex flex-wrap gap-2">
+                                    {[
+                                        { type: 'migraine', label: '🤕 Migraines', color: 'bg-red-500' },
+                                        { type: 'activity', label: '🏃 Activités', color: 'bg-green-500' },
+                                        { type: 'medication', label: '💊 Médicaments', color: 'bg-blue-500' },
+                                        { type: 'treatment', label: '💉 Traitements', color: 'bg-purple-500' },
+                                        { type: 'calories', label: '🍎 Calories', color: 'bg-yellow-500' },
+                                        { type: 'screentime', label: '💻 Temps d\'écran', color: 'bg-cyan-500' }
+                                    ].map(({ type, label, color }) => (
+                                        <Button
+                                            key={type}
+                                            variant={selectedTypes.includes(type) ? 'default' : 'outline'}
+                                            size="sm"
+                                            onClick={() => toggleType(type)}
+                                            className={selectedTypes.includes(type) ? color : ''}
+                                        >
+                                            {label}
+                                        </Button>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
 
-                {/* Data Table */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Tableau de Données</CardTitle>
-                        <CardDescription>{filteredEntries.length} entrées affichées</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead className="border-b">
-                                    <tr className="text-left">
-                                        <th className="p-2">Date</th>
-                                        <th className="p-2">Type</th>
-                                        <th className="p-2">Détails</th>
-                                        <th className="p-2">Météo</th>
-                                        <th className="p-2">Santé</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredEntries.slice(0, 100).map((entry) => {
-                                        const e = entry as any;
-                                        const garminForDate = garminData.find(g =>
-                                            format(new Date(g.date), 'yyyy-MM-dd') === format(new Date(e.date), 'yyyy-MM-dd')
-                                        );
-
-                                        return (
-                                            <tr key={e.id} className="border-b hover:bg-muted/50">
-                                                <td className="p-2 whitespace-nowrap">
-                                                    {format(new Date(e.date), 'dd/MM/yyyy HH:mm', { locale: fr })}
-                                                </td>
-                                                <td className="p-2">
-                                                    <span className="px-2 py-1 rounded text-xs bg-primary/20">
-                                                        {e.type}
-                                                    </span>
-                                                </td>
-                                                <td className="p-2">
-                                                    {e.type === 'migraine' && `Intensité: ${e.intensity}/10`}
-                                                    {e.type === 'activity' && `${e.duration}min - ${e.intensity}`}
-                                                    {e.type === 'calories' && `${e.totalCalories} kcal`}
-                                                    {e.type === 'screentime' && `${e.duration}h`}
-                                                </td>
-                                                <td className="p-2 text-xs">
-                                                    {e.weather && (
-                                                        <div>
-                                                            {e.weather.temperature}°C, {e.weather.pressure}hPa
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="p-2 text-xs">
-                                                    {garminForDate && (
-                                                        <div>
-                                                            Sommeil: {garminForDate.sleepScore}, Stress: {garminForDate.avgStress}
-                                                        </div>
-                                                    )}
-                                                </td>
+                        {/* Data Table */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Journal des Entrées</CardTitle>
+                                <CardDescription>{filteredEntries.length} entrées affichées</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead className="border-b">
+                                            <tr className="text-left">
+                                                <th className="p-2">Date</th>
+                                                <th className="p-2">Type</th>
+                                                <th className="p-2">Détails</th>
+                                                <th className="p-2">Météo</th>
                                             </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                        {filteredEntries.length > 100 && (
-                            <p className="text-sm text-muted-foreground mt-4 text-center">
-                                Affichage des 100 premières entrées. Exportez pour voir toutes les données.
-                            </p>
-                        )}
-                    </CardContent>
-                </Card>
+                                        </thead>
+                                        <tbody>
+                                            {filteredEntries.slice(0, 100).map((entry) => {
+                                                const e = entry as any;
+                                                return (
+                                                    <tr key={e.id} className="border-b hover:bg-muted/50">
+                                                        <td className="p-2 whitespace-nowrap">
+                                                            {format(new Date(e.date), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                                                        </td>
+                                                        <td className="p-2">
+                                                            <span className="px-2 py-1 rounded text-xs bg-primary/20">
+                                                                {e.type}
+                                                            </span>
+                                                        </td>
+                                                        <td className="p-2">
+                                                            {e.type === 'migraine' && `Intensité: ${e.intensity}/10`}
+                                                            {e.type === 'activity' && `${e.duration}min - ${e.intensity}`}
+                                                            {e.type === 'calories' && `${e.totalCalories} kcal`}
+                                                            {e.type === 'screentime' && `${e.duration}h`}
+                                                        </td>
+                                                        <td className="p-2 text-xs">
+                                                            {e.weather && (
+                                                                <div>
+                                                                    {e.weather.temperature}°C, {e.weather.pressure}hPa
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="garmin">
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <div>
+                                    <CardTitle>Données Garmin</CardTitle>
+                                    <CardDescription>Métriques de santé synchronisées</CardDescription>
+                                </div>
+                                <Button onClick={handleSyncGarmin} disabled={syncingGarmin}>
+                                    <RefreshCw className={`h-4 w-4 mr-2 ${syncingGarmin ? 'animate-spin' : ''}`} />
+                                    Synchroniser
+                                </Button>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead className="border-b">
+                                            <tr className="text-left">
+                                                <th className="p-2">Date</th>
+                                                <th className="p-2">Score Sommeil</th>
+                                                <th className="p-2">Stress Moyen</th>
+                                                <th className="p-2">FC Repos</th>
+                                                <th className="p-2">Heures Sommeil</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {garminData.map((data, i) => (
+                                                <tr key={i} className="border-b hover:bg-muted/50">
+                                                    <td className="p-2 whitespace-nowrap">
+                                                        {format(new Date(data.date), 'dd/MM/yyyy', { locale: fr })}
+                                                    </td>
+                                                    <td className="p-2 font-medium">{data.sleepScore}</td>
+                                                    <td className="p-2">{data.avgStress}</td>
+                                                    <td className="p-2">{data.restingHeartRate} bpm</td>
+                                                    <td className="p-2">{data.sleepDurationHours?.toFixed(1)}h</td>
+                                                </tr>
+                                            ))}
+                                            {garminData.length === 0 && (
+                                                <tr>
+                                                    <td colSpan={5} className="p-4 text-center text-muted-foreground">
+                                                        Aucune donnée Garmin disponible. Cliquez sur Synchroniser.
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="strava">
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <div>
+                                    <CardTitle>Activités Strava</CardTitle>
+                                    <CardDescription>Activités sportives synchronisées</CardDescription>
+                                </div>
+                                <Button onClick={handleSyncStrava} disabled={syncingStrava}>
+                                    <RefreshCw className={`h-4 w-4 mr-2 ${syncingStrava ? 'animate-spin' : ''}`} />
+                                    Synchroniser
+                                </Button>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead className="border-b">
+                                            <tr className="text-left">
+                                                <th className="p-2">Date</th>
+                                                <th className="p-2">Activité</th>
+                                                <th className="p-2">Durée</th>
+                                                <th className="p-2">Distance</th>
+                                                <th className="p-2">FC Moyenne</th>
+                                                <th className="p-2">Suffer Score</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {stravaData.map((activity, i) => (
+                                                <tr key={i} className="border-b hover:bg-muted/50">
+                                                    <td className="p-2 whitespace-nowrap">
+                                                        {format(new Date(activity.start_date), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                                                    </td>
+                                                    <td className="p-2 font-medium">{activity.name}</td>
+                                                    <td className="p-2">{(activity.moving_time / 60).toFixed(0)} min</td>
+                                                    <td className="p-2">{(activity.distance / 1000).toFixed(2)} km</td>
+                                                    <td className="p-2">{activity.average_heartrate ? `${activity.average_heartrate.toFixed(0)} bpm` : '-'}</td>
+                                                    <td className="p-2">{activity.suffer_score || '-'}</td>
+                                                </tr>
+                                            ))}
+                                            {stravaData.length === 0 && (
+                                                <tr>
+                                                    <td colSpan={6} className="p-4 text-center text-muted-foreground">
+                                                        Aucune activité Strava disponible. Cliquez sur Synchroniser.
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             </div>
         </div>
     );

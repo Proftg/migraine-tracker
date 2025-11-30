@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { X, Save } from "lucide-react";
+import { X, Save, Info } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 
@@ -168,14 +168,17 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
                 </div>
 
                 {/* Info */}
-                <Card className="mt-8 bg-blue-50/50 border-blue-200">
+                <Card className="mt-8 bg-muted">
                     <CardContent className="p-6">
-                        <h3 className="font-semibold mb-2">ℹ️ À propos de la configuration</h3>
-                        <ul className="text-sm text-muted-foreground space-y-2">
-                            <li>• Les changements prendront effet lors de la prochaine prédiction</li>
-                            <li>• Il est recommandé d'activer au moins 3 sources pour une prédiction fiable</li>
-                            <li>• Les données Garmin et Météo ont le plus grand impact sur la précision</li>
-                            <li>• Vous pouvez modifier ces paramètres à tout moment</li>
+                        <div className="flex items-center gap-2 mb-4">
+                            <Info className="h-5 w-5 text-primary" />
+                            <h3 className="font-semibold">À propos de la configuration</h3>
+                        </div>
+                        <ul className="text-sm text-muted-foreground space-y-2 list-disc pl-5">
+                            <li>Les changements prendront effet lors de la prochaine prédiction</li>
+                            <li>Il est recommandé d'activer au moins 3 sources pour une prédiction fiable</li>
+                            <li>Les données Garmin et Météo ont le plus grand impact sur la précision</li>
+                            <li>Vous pouvez modifier ces paramètres à tout moment</li>
                         </ul>
                     </CardContent>
                 </Card>
