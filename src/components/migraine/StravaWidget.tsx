@@ -59,6 +59,28 @@ export function StravaWidget() {
         }
     };
 
+    // Helper to clean activity type name
+    const formatActivityType = (type: string) => {
+        let cleanType = type;
+        if (type.includes("root=")) {
+            cleanType = type.replace(/root='|'/g, "");
+        }
+        
+        const typeMapping: Record<string, string> = {
+            'WeightTraining': 'Musculation',
+            'Run': 'Course à pieds',
+            'Ride': 'Vélo',
+            'VirtualRun': 'Course virtuelle',
+            'VirtualRide': 'Vélo virtuel',
+            'Swim': 'Natation',
+            'Walk': 'Marche',
+            'Hike': 'Randonnée',
+            'Workout': 'Entraînement'
+        };
+
+        return typeMapping[cleanType] || cleanType;
+    };
+
     return (
         <Card className="w-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -93,7 +115,7 @@ export function StravaWidget() {
                                 <div className="flex items-start justify-between mb-2">
                                     <div className="space-y-1 flex-1">
                                         <p className="text-sm font-medium leading-none">
-                                            {activity.activityType}
+                                            {formatActivityType(activity.activityType)}
                                         </p>
                                         <p className="text-xs text-muted-foreground">
                                             {format(new Date(activity.date), "d MMMM à HH:mm", { locale: fr })}
@@ -103,31 +125,31 @@ export function StravaWidget() {
                                         <span className="text-sm font-bold">{Math.round(activity.duration)} min</span>
                                     </div>
                                 </div>
-
+                                
                                 {/* Metrics Grid */}
                                 <div className="grid grid-cols-2 gap-2 mt-2">
-                                    {activity.sufferScore && (
+                                    {!!activity.sufferScore && (
                                         <div className="flex items-center gap-1 text-xs">
                                             <Flame className="h-3 w-3 text-orange-500" />
                                             <span className="text-muted-foreground">Charge:</span>
                                             <span className="font-semibold">{activity.sufferScore}</span>
                                         </div>
                                     )}
-                                    {activity.averageHeartRate && (
+                                    {!!activity.averageHeartRate && (
                                         <div className="flex items-center gap-1 text-xs">
                                             <Heart className="h-3 w-3 text-red-500" />
                                             <span className="text-muted-foreground">FC moy:</span>
                                             <span className="font-semibold">{activity.averageHeartRate}</span>
                                         </div>
                                     )}
-                                    {activity.elevationGain && activity.elevationGain > 0 && (
+                                    {!!activity.elevationGain && activity.elevationGain > 0 && (
                                         <div className="flex items-center gap-1 text-xs">
                                             <Mountain className="h-3 w-3 text-green-600" />
                                             <span className="text-muted-foreground">D+:</span>
                                             <span className="font-semibold">{activity.elevationGain}m</span>
                                         </div>
                                     )}
-                                    {activity.distance && activity.distance > 0 && (
+                                    {!!activity.distance && activity.distance > 0 && (
                                         <div className="flex items-center gap-1 text-xs">
                                             <Activity className="h-3 w-3 text-blue-500" />
                                             <span className="text-muted-foreground">Dist:</span>
