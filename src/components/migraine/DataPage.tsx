@@ -340,6 +340,8 @@ export function DataPage({ onClose }: DataPageProps) {
                                                 <th className="p-2">Date</th>
                                                 <th className="p-2">Score Sommeil</th>
                                                 <th className="p-2">Stress Moyen</th>
+                                                <th className="p-2">Body Battery</th>
+                                                <th className="p-2">Charge Entraînement</th>
                                                 <th className="p-2">Heures Sommeil</th>
                                             </tr>
                                         </thead>
@@ -351,12 +353,14 @@ export function DataPage({ onClose }: DataPageProps) {
                                                     </td>
                                                     <td className="p-2 font-medium">{data.sleep_score ?? '-'}</td>
                                                     <td className="p-2">{data.stress_avg ?? '-'}</td>
+                                                    <td className="p-2">{data.body_battery_max ? `${data.body_battery_max}%` : '-'}</td>
+                                                    <td className="p-2">{data.training_load ?? '-'}</td>
                                                     <td className="p-2">{data.sleep_seconds ? `${(data.sleep_seconds / 3600).toFixed(1)}h` : '-'}</td>
                                                 </tr>
                                             ))}
                                             {garminData.length === 0 && (
                                                 <tr>
-                                                    <td colSpan={4} className="p-4 text-center text-muted-foreground">
+                                                    <td colSpan={6} className="p-4 text-center text-muted-foreground">
                                                         Aucune donnée Garmin disponible. Cliquez sur Synchroniser.
                                                     </td>
                                                 </tr>
