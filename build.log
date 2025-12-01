@@ -1,0 +1,23 @@
+
+> migraine-tracker@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.3
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./src/components/migraine/DataPage.tsx:82:27
+Type error: Property 'duration' does not exist on type 'JournalEntry'.
+  Property 'duration' does not exist on type 'MedicationEntry'.
+
+[0m [90m 80 |[39m                     entry[33m.[39mtype[33m,[39m[0m
+[0m [90m 81 |[39m                     (entry [36mas[39m any)[33m.[39mintensity [33m||[39m [32m''[39m[33m,[39m[0m
+[0m[31m[1m>[22m[39m[90m 82 |[39m                     entry[33m.[39mduration [33m||[39m [32m''[39m[33m,[39m[0m
+[0m [90m    |[39m                           [31m[1m^[22m[39m[0m
+[0m [90m 83 |[39m                     entry[33m.[39mnotes [33m||[39m [32m''[39m[33m,[39m[0m
+[0m [90m 84 |[39m                     entry[33m.[39mweather[33m?[39m[33m.[39mtemperature [33m||[39m [32m''[39m[33m,[39m[0m
+[0m [90m 85 |[39m                     entry[33m.[39mweather[33m?[39m[33m.[39mpressure [33m||[39m [32m''[39m[33m,[39m[0m
