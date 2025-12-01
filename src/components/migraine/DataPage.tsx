@@ -141,8 +141,8 @@ export function DataPage({ onClose }: DataPageProps) {
                     e.weather?.humidity ?? '',
                     e.totalCalories || e.caloriesBurned || '',
                     e.averageHeartRate || '',
-                    garminForDate?.avgStress || '',
-                    garminForDate?.sleepScore || ''
+                    garminForDate?.stress_avg || '',
+                    garminForDate?.sleep_score || ''
                 ].join(',');
             });
 
@@ -177,8 +177,8 @@ export function DataPage({ onClose }: DataPageProps) {
                     'Humidité (%)': e.weather?.humidity ?? '',
                     Calories: e.totalCalories || e.caloriesBurned || '',
                     'FC Moyenne': e.averageHeartRate || '',
-                    Stress: garminForDate?.avgStress || '',
-                    'Score Sommeil': garminForDate?.sleepScore || ''
+                    Stress: garminForDate?.stress_avg || '',
+                    'Score Sommeil': garminForDate?.sleep_score || ''
                 };
             });
 
@@ -350,10 +350,10 @@ export function DataPage({ onClose }: DataPageProps) {
                                                     <td className="p-2 whitespace-nowrap">
                                                         {safeFormatDate(data.date, 'dd/MM/yyyy')}
                                                     </td>
-                                                    <td className="p-2 font-medium">{data.sleepScore ?? '-'}</td>
-                                                    <td className="p-2">{data.avgStress ?? '-'}</td>
-                                                    <td className="p-2">{data.restingHeartRate ? `${data.restingHeartRate} bpm` : '-'}</td>
-                                                    <td className="p-2">{data.sleepDurationHours ? `${data.sleepDurationHours.toFixed(1)}h` : '-'}</td>
+                                                    <td className="p-2 font-medium">{data.sleep_score ?? '-'}</td>
+                                                    <td className="p-2">{data.stress_avg ?? '-'}</td>
+                                                    <td className="p-2">{data.resting_hr ? `${data.resting_hr} bpm` : '-'}</td>
+                                                    <td className="p-2">{data.sleep_seconds ? `${(data.sleep_seconds / 3600).toFixed(1)}h` : '-'}</td>
                                                 </tr>
                                             ))}
                                             {garminData.length === 0 && (
