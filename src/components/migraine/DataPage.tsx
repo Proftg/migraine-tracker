@@ -388,7 +388,7 @@ export function DataPage({ onClose }: DataPageProps) {
                                         <thead className="border-b">
                                             <tr className="text-left">
                                                 <th className="p-2">Date</th>
-                                                <th className="p-2">Activité</th>
+                                                <th className="p-2">Nom</th>
                                                 <th className="p-2">Durée</th>
                                                 <th className="p-2">Distance</th>
                                                 <th className="p-2">FC Moyenne</th>
@@ -399,13 +399,13 @@ export function DataPage({ onClose }: DataPageProps) {
                                             {stravaData.map((activity, i) => (
                                                 <tr key={i} className="border-b hover:bg-muted/50">
                                                     <td className="p-2 whitespace-nowrap">
-                                                        {safeFormatDate(activity.start_date, 'dd/MM/yyyy HH:mm')}
+                                                        {safeFormatDate(activity.date, 'dd/MM/yyyy HH:mm')}
                                                     </td>
-                                                    <td className="p-2 font-medium">{activity.name || '-'}</td>
-                                                    <td className="p-2">{activity.moving_time ? `${(activity.moving_time / 60).toFixed(0)} min` : '-'}</td>
+                                                    <td className="p-2 font-medium">{activity.notes || activity.activityType || '-'}</td>
+                                                    <td className="p-2">{activity.duration ? `${activity.duration} min` : '-'}</td>
                                                     <td className="p-2">{activity.distance ? `${(activity.distance / 1000).toFixed(2)} km` : '-'}</td>
-                                                    <td className="p-2">{activity.average_heartrate ? `${activity.average_heartrate.toFixed(0)} bpm` : '-'}</td>
-                                                    <td className="p-2">{activity.suffer_score ?? '-'}</td>
+                                                    <td className="p-2">{activity.averageHeartRate ? `${activity.averageHeartRate} bpm` : '-'}</td>
+                                                    <td className="p-2">{activity.sufferScore ?? '-'}</td>
                                                 </tr>
                                             ))}
                                             {stravaData.length === 0 && (
