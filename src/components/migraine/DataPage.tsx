@@ -340,7 +340,6 @@ export function DataPage({ onClose }: DataPageProps) {
                                                 <th className="p-2">Date</th>
                                                 <th className="p-2">Score Sommeil</th>
                                                 <th className="p-2">Stress Moyen</th>
-                                                <th className="p-2">FC Repos</th>
                                                 <th className="p-2">Heures Sommeil</th>
                                             </tr>
                                         </thead>
@@ -352,13 +351,12 @@ export function DataPage({ onClose }: DataPageProps) {
                                                     </td>
                                                     <td className="p-2 font-medium">{data.sleep_score ?? '-'}</td>
                                                     <td className="p-2">{data.stress_avg ?? '-'}</td>
-                                                    <td className="p-2">{data.resting_hr ? `${data.resting_hr} bpm` : '-'}</td>
                                                     <td className="p-2">{data.sleep_seconds ? `${(data.sleep_seconds / 3600).toFixed(1)}h` : '-'}</td>
                                                 </tr>
                                             ))}
                                             {garminData.length === 0 && (
                                                 <tr>
-                                                    <td colSpan={5} className="p-4 text-center text-muted-foreground">
+                                                    <td colSpan={4} className="p-4 text-center text-muted-foreground">
                                                         Aucune donnée Garmin disponible. Cliquez sur Synchroniser.
                                                     </td>
                                                 </tr>
@@ -392,7 +390,6 @@ export function DataPage({ onClose }: DataPageProps) {
                                                 <th className="p-2">Durée</th>
                                                 <th className="p-2">Distance</th>
                                                 <th className="p-2">FC Moyenne</th>
-                                                <th className="p-2">Suffer Score</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -405,12 +402,11 @@ export function DataPage({ onClose }: DataPageProps) {
                                                     <td className="p-2">{activity.duration ? `${activity.duration} min` : '-'}</td>
                                                     <td className="p-2">{activity.distance ? `${(activity.distance / 1000).toFixed(2)} km` : '-'}</td>
                                                     <td className="p-2">{activity.averageHeartRate ? `${activity.averageHeartRate} bpm` : '-'}</td>
-                                                    <td className="p-2">{activity.sufferScore ?? '-'}</td>
                                                 </tr>
                                             ))}
                                             {stravaData.length === 0 && (
                                                 <tr>
-                                                    <td colSpan={6} className="p-4 text-center text-muted-foreground">
+                                                    <td colSpan={5} className="p-4 text-center text-muted-foreground">
                                                         Aucune activité Strava disponible. Cliquez sur Synchroniser.
                                                     </td>
                                                 </tr>
