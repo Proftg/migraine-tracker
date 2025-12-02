@@ -72,8 +72,8 @@ export const analytics = {
             };
         }
 
-        const totalIntensity = migraines.reduce((sum, m) => sum + m.intensity, 0);
-        const totalDuration = migraines.reduce((sum, m) => sum + (m.duration || 0), 0);
+        const totalIntensity = migraines.reduce((sum, m) => sum + Number(m.intensity), 0);
+        const totalDuration = migraines.reduce((sum, m) => sum + Number(m.duration || 0), 0);
         const migrainesWithDuration = migraines.filter(m => m.duration).length;
 
         // Most common location
@@ -163,21 +163,21 @@ export const analytics = {
 
             if (recentActivity) {
                 migrainesAfterSports++;
-                totalIntensityAfterSports += migraine.intensity;
+                totalIntensityAfterSports += Number(migraine.intensity);
 
                 const sportType = recentActivity.activityType;
                 if (!sportTypeCounts[sportType]) {
                     sportTypeCounts[sportType] = { count: 0, totalIntensity: 0 };
                 }
                 sportTypeCounts[sportType].count++;
-                sportTypeCounts[sportType].totalIntensity += migraine.intensity;
+                sportTypeCounts[sportType].totalIntensity += Number(migraine.intensity);
             }
         });
 
         const migrainesWithoutSports = migraines.length - migrainesAfterSports;
         const avgIntensityWithSports = migrainesAfterSports > 0 ? totalIntensityAfterSports / migrainesAfterSports : 0;
         const avgIntensityWithoutSports = migrainesWithoutSports > 0
-            ? (migraines.reduce((sum, m) => sum + m.intensity, 0) - totalIntensityAfterSports) / migrainesWithoutSports
+            ? (migraines.reduce((sum, m) => sum + Number(m.intensity), 0) - totalIntensityAfterSports) / migrainesWithoutSports
             : 0;
 
         const riskBySportType = Object.entries(sportTypeCounts).map(([sport, data]) => ({
@@ -275,7 +275,7 @@ export const analytics = {
             };
 
             const averageScreenTimeBeforeCrisis = migrainesWithScreenData.length > 0
-                ? migrainesWithScreenData.reduce((sum, m) => sum + (m.screenTimeBeforeCrisis || 0), 0) / migrainesWithScreenData.length
+                ? migrainesWithScreenData.reduce((sum, m) => sum + Number(m.screenTimeBeforeCrisis || 0), 0) / migrainesWithScreenData.length
                 : 0;
 
             return {
@@ -355,7 +355,7 @@ export const analytics = {
                 : 0
         };
 
-        const averageScreenTimeBeforeCrisis = screenTimeEntries.reduce((sum: number, e: any) => sum + e.duration, 0) / screenTimeEntries.length;
+        const averageScreenTimeBeforeCrisis = screenTimeEntries.reduce((sum: number, e: any) => sum + Number(e.duration), 0) / screenTimeEntries.length;
 
         return {
             riskByDuration,
@@ -377,7 +377,7 @@ export const analytics = {
         });
 
         const averageStressOnMigraineDays = migrainesWithStress.length > 0
-            ? migrainesWithStress.reduce((sum, m) => sum + (m.stressLevel || 0), 0) / migrainesWithStress.length
+            ? migrainesWithStress.reduce((sum, m) => sum + Number(m.stressLevel || 0), 0) / migrainesWithStress.length
             : 0;
 
         return {
@@ -487,10 +487,10 @@ export const analytics = {
         const beforeStats = {
             totalMigraines: before.length,
             averageIntensity: before.length > 0
-                ? before.reduce((sum, m) => sum + m.intensity, 0) / before.length
+                ? before.reduce((sum, m) => sum + Number(m.intensity), 0) / before.length
                 : 0,
             averageDuration: before.filter(m => m.duration).length > 0
-                ? before.reduce((sum, m) => sum + (m.duration || 0), 0) / before.filter(m => m.duration).length
+                ? before.reduce((sum, m) => sum + Number(m.duration || 0), 0) / before.filter(m => m.duration).length
                 : 0,
             migrainesPerMonth: daysBeforeTreatment > 0
                 ? (before.length / daysBeforeTreatment) * 30
@@ -501,10 +501,10 @@ export const analytics = {
         const afterStats = {
             totalMigraines: after.length,
             averageIntensity: after.length > 0
-                ? after.reduce((sum, m) => sum + m.intensity, 0) / after.length
+                ? after.reduce((sum, m) => sum + Number(m.intensity), 0) / after.length
                 : 0,
             averageDuration: after.filter(m => m.duration).length > 0
-                ? after.reduce((sum, m) => sum + (m.duration || 0), 0) / after.filter(m => m.duration).length
+                ? after.reduce((sum, m) => sum + Number(m.duration || 0), 0) / after.filter(m => m.duration).length
                 : 0,
             migrainesPerMonth: daysAfterTreatment > 0
                 ? (after.length / daysAfterTreatment) * 30
@@ -545,13 +545,13 @@ export const analytics = {
             const intake = calorieEntries.find(e => new Date(e.date).toDateString() === dayStr)?.totalCalories || 0;
             const burn = activityEntries
                 .filter(e => new Date(e.date).toDateString() === dayStr)
-                .reduce((sum, e) => sum + (e.caloriesBurned || 0), 0);
+                .reduce((sum, e) => sum + Number(e.caloriesBurned || 0), 0);
             return { intake, burn, net: intake - burn };
         };
 
         // Calculate averages
-        const totalIntake = calorieEntries.reduce((sum, e) => sum + e.totalCalories, 0);
-        const totalBurn = activityEntries.reduce((sum, e) => sum + (e.caloriesBurned || 0), 0);
+        const totalIntake = calorieEntries.reduce((sum, e) => sum + Number(e.totalCalories), 0);
+        const totalBurn = activityEntries.reduce((sum, e) => sum + Number(e.caloriesBurned || 0), 0);
         const uniqueDays = new Set(entries.map(e => new Date(e.date).toDateString())).size || 1;
 
         const averageDailyIntake = Math.round(totalIntake / (calorieEntries.length || 1));
@@ -693,7 +693,7 @@ export const analytics = {
         const sufferScoreEvolution: { date: string; score: number; hasMigraine: boolean }[] = [];
         activitiesByDate.forEach((dayActivities, dateKey) => {
             const totalSufferScore = dayActivities.reduce((sum, a) =>
-                sum + (a.sufferScore || 0), 0
+                sum + Number(a.sufferScore || 0), 0
             );
             const hasMigraine = migraines.some(m => m.date.startsWith(dateKey));
 
@@ -775,25 +775,25 @@ export const analytics = {
 
             // Calculate averages
             const avgSleepScore = metrics.reduce((sum: number, m: any) =>
-                sum + (m.sleep_score || 0), 0) / metrics.length;
+                sum + Number(m.sleep_score || 0), 0) / metrics.length;
 
             const avgSleepHours = metrics.reduce((sum: number, m: any) =>
-                sum + ((m.sleep_seconds || 0) / 3600), 0) / metrics.length;
+                sum + (Number(m.sleep_seconds || 0) / 3600), 0) / metrics.length;
 
             const avgStress = metrics.reduce((sum: number, m: any) =>
-                sum + (m.stress_avg || 0), 0) / metrics.length;
+                sum + Number(m.stress_avg || 0), 0) / metrics.length;
 
             const avgRestingHR = metrics.reduce((sum: number, m: any) =>
-                sum + (m.resting_hr || 0), 0) / metrics.length;
+                sum + Number(m.resting_hr || 0), 0) / metrics.length;
 
             // Trends (last 7 days vs previous 7 days)
             const recent = metrics.slice(-7);
             const previous = metrics.slice(-14, -7);
 
             const recentAvgSleep = recent.reduce((sum: number, m: any) =>
-                sum + (m.sleep_score || 0), 0) / recent.length;
+                sum + Number(m.sleep_score || 0), 0) / recent.length;
             const previousAvgSleep = previous.reduce((sum: number, m: any) =>
-                sum + (m.sleep_score || 0), 0) / previous.length;
+                sum + Number(m.sleep_score || 0), 0) / previous.length;
 
             const sleepTrend = recentAvgSleep - previousAvgSleep;
 
