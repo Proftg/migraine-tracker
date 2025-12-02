@@ -29,21 +29,35 @@ def login_garmin():
     home_dir = os.path.expanduser("~")
     garth_dir = os.path.join(home_dir, ".garth")
     
+    # Check if running non-interactively (from API)
+    is_interactive = sys.stdin.isatty()
+    
     try:
         garth.resume(garth_dir)
         try:
             garth.client.username
             print("✅ Using saved Garmin session")
         except:
+            if not is_interactive:
+                print("❌ Error: Session expired and cannot login interactively")
+                print("Please run 'python3 scripts/garmin-sync.py' manually first to authenticate")
+                sys.exit(1)
             print("Session expired, logging in again...")
             garth.login(GARMIN_EMAIL, GARMIN_PASSWORD)
             garth.save(garth_dir)
     except FileNotFoundError:
+        if not is_interactive:
+            print("❌ Error: No Garmin session found")
+            print("Please run 'python3 scripts/garmin-sync.py' manually first to authenticate with MFA")
+            sys.exit(1)
         print("No session found, logging in...")
         garth.login(GARMIN_EMAIL, GARMIN_PASSWORD)
         garth.save(garth_dir)
     except Exception as e:
         print(f"❌ Error logging in: {e}")
+        if not is_interactive:
+            print("Cannot login interactively. Please run manually first.")
+            sys.exit(1)
         try:
             print("Attempting fresh login...")
             garth.login(GARMIN_EMAIL, GARMIN_PASSWORD)
@@ -72,36 +86,43 @@ def sync_garmin():
             day_str = day.isoformat()
             
             try:
-                # Get daily stats
-                stats = garth.connectapi(f"/usersummary-service/stats/daily/{day_str}")
+                # Get daily stats - UPDATED ENDPOINT
+                stats = garth.connectapi(f"/usersummary-service/usersummary/daily/{garth.client.username}", params={"calendarDate": day_str})
                 
                 # Get sleep data
-                sleep_data = garth.connectapi(f"/wellness-service/wellness/dailySleepData/{garth.client.username}",
-                                             params={"date": day_str})
-                
-                # Extract metrics
                 sleep_score = None
                 sleep_seconds = None
-                
-                if sleep_data and 'dailySleepDTO' in sleep_data:
-                    sleep_dto = sleep_data['dailySleepDTO']
-                    sleep_score = sleep_dto.get('sleepScores', {}).get('overall', {}).get('value')
-                    sleep_seconds = sleep_dto.get('sleepTimeSeconds')
+                try:
+                    sleep_data = garth.connectapi(f"/wellness-service/wellness/dailySleepData/{garth.client.username}",
+                                                 params={"date": day_str})
+                    if sleep_data and 'dailySleepDTO' in sleep_data:
+                        sleep_dto = sleep_data['dailySleepDTO']
+                        sleep_score = sleep_dto.get('sleepScores', {}).get('overall', {}).get('value')
+                        sleep_seconds = sleep_dto.get('sleepTimeSeconds')
+                except Exception as e:
+                    print(f"⚠️  Sleep data error for {day_str}: {e}")
                 
                 # Get stress data
-                stress_data = garth.connectapi(f"/wellness-service/wellness/dailyStress/{day_str}")
                 avg_stress = None
-                if stress_data and 'avgStressLevel' in stress_data:
-                    avg_stress = stress_data['avgStressLevel']
+                try:
+                    stress_data = garth.connectapi(f"/wellness-service/wellness/dailyStress/{day_str}")
+                    if stress_data and 'avgStressLevel' in stress_data:
+                        avg_stress = stress_data['avgStressLevel']
+                except Exception as e:
+                    print(f"⚠️  Stress data error for {day_str}: {e}")
                 
                 # Get body battery
-                body_battery_data = garth.connectapi(f"/wellness-service/wellness/bodyBattery/reports/daily/{day_str}/{day_str}")
                 body_battery_max = None
                 body_battery_min = None
-                if body_battery_data and len(body_battery_data) > 0:
-                    bb = body_battery_data[0]
-                    body_battery_max = bb.get('charged')
-                    body_battery_min = bb.get('drained')
+                try:
+                    # Try alternate endpoint format if needed, or just catch error
+                    body_battery_data = garth.connectapi(f"/wellness-service/wellness/bodyBattery/reports/daily/{day_str}/{day_str}")
+                    if body_battery_data and len(body_battery_data) > 0:
+                        bb = body_battery_data[0]
+                        body_battery_max = bb.get('charged')
+                        body_battery_min = bb.get('drained')
+                except Exception as e:
+                    print(f"⚠️  Body Battery error for {day_str}: {e}")
                 
                 # Get training status for load
                 training_load = None
