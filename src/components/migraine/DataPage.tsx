@@ -300,6 +300,7 @@ export function DataPage({ onClose }: DataPageProps) {
                                                         <td className="p-2">
                                                             {e.type === 'migraine' && `Intensité: ${e.intensity}/10`}
                                                             {e.type === 'activity' && `${e.duration}min - ${e.intensity}`}
+                                                            {e.type === 'treatment' && `${e.medicationName} (${e.dosage})`}
                                                             {e.type === 'calories' && `${e.totalCalories} kcal`}
                                                             {e.type === 'screentime' && `${e.duration}h`}
                                                         </td>

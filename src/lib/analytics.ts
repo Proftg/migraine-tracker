@@ -72,8 +72,8 @@ export const analytics = {
             };
         }
 
-        const totalIntensity = migraines.reduce((sum, m) => sum + m.intensity, 0);
-        const totalDuration = migraines.reduce((sum, m) => sum + (m.duration || 0), 0);
+        const totalIntensity = migraines.reduce((sum, m) => sum + Number(m.intensity), 0);
+        const totalDuration = migraines.reduce((sum, m) => sum + Number(m.duration || 0), 0);
         const migrainesWithDuration = migraines.filter(m => m.duration).length;
 
         // Most common location

@@ -22,6 +22,7 @@ import { PredictionWidget } from "@/components/migraine/PredictionWidget";
 import { NavigationMenu, QuickActionsMenu, ExportMenu } from "@/components/migraine/NavigationMenu";
 import { DataPage } from "@/components/migraine/DataPage";
 import { SettingsPage } from "@/components/migraine/SettingsPage";
+import { TreatmentCard } from "@/components/migraine/TreatmentCard";
 
 type PageView = 'dashboard' | 'report' | 'data' | 'settings';
 
@@ -130,6 +131,22 @@ export default function Home() {
             case 'screentime': setShowScreenTimeInput(true); break;
             case 'calories': setShowCalorieReminder(true); break;
         }
+    };
+
+    const handleTreatmentLog = async (data: any) => {
+        const newEntry: JournalEntry = {
+            id: Date.now().toString(),
+            type: "treatment",
+            date: data.date,
+            medicationName: data.medicationName,
+            dosage: data.dosage,
+            administrationRoute: data.administrationRoute,
+            isPreventive: data.isPreventive,
+            notes: data.notes,
+            weather: getEntryWeather()
+        } as JournalEntry;
+        const updated = await storage.addEntry(newEntry);
+        setEntries(updated);
     };
 
     const handleCrisisLog = async (data: any) => {
@@ -315,7 +332,7 @@ export default function Home() {
                 {currentView === 'dashboard' && (
                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         {/* AI Dashboard Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {riskAssessment && <RiskIndicator assessment={riskAssessment} />}
                             <PredictionWidget
                                 prediction={prediction}
@@ -323,6 +340,7 @@ export default function Home() {
                                 dataCount={entries.length}
                                 hasGarminData={prediction?.usedGarminData}
                             />
+                            <TreatmentCard entries={entries} onLogTreatment={handleTreatmentLog} />
                         </div>
 
                         {/* Quick Actions & Export */}

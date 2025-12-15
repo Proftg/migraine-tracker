@@ -54,6 +54,8 @@ export function CrisisMode({ onClose, onLogCrisis }: CrisisModeProps) {
     const [location, setLocation] = useState('');
     const [symptoms, setSymptoms] = useState<string[]>([]);
     const [customSymptom, setCustomSymptom] = useState('');
+    const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
+    const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10));
     const [exactTime, setExactTime] = useState(new Date().toTimeString().slice(0, 5));
     const [endTime, setEndTime] = useState('');
     const [calculatedDuration, setCalculatedDuration] = useState<number | null>(null);
@@ -69,25 +71,25 @@ export function CrisisMode({ onClose, onLogCrisis }: CrisisModeProps) {
     const [reliefDuration, setReliefDuration] = useState<number | undefined>();
 
     // Calculate duration when end time changes
-    const calculateDuration = (start: string, end: string): number | null => {
-        if (!start || !end) return null;
+    const calculateDuration = (sDate: string, sTime: string, eDate: string, eTime: string): number | null => {
+        if (!sDate || !sTime || !eDate || !eTime) return null;
 
-        const today = new Date();
-        const startDate = new Date(today.toDateString() + ' ' + start);
-        let endDate = new Date(today.toDateString() + ' ' + end);
+        const start = new Date(`${sDate}T${sTime}`);
+        const end = new Date(`${eDate}T${eTime}`);
 
-        // Handle overnight crises (e.g., start 23:00, end 02:00)
-        if (endDate < startDate) {
-            endDate.setDate(endDate.getDate() + 1);
-        }
-
-        const diffMs = endDate.getTime() - startDate.getTime();
+        const diffMs = end.getTime() - start.getTime();
         return Math.round(diffMs / (1000 * 60)); // Convert to minutes
     };
 
     const handleEndTimeChange = (time: string) => {
         setEndTime(time);
-        const duration = calculateDuration(exactTime, time);
+        const duration = calculateDuration(startDate, exactTime, endDate, time);
+        setCalculatedDuration(duration);
+    };
+
+    const handleEndDateChange = (date: string) => {
+        setEndDate(date);
+        const duration = calculateDuration(startDate, exactTime, date, endTime);
         setCalculatedDuration(duration);
     };
 
@@ -157,8 +159,8 @@ export function CrisisMode({ onClose, onLogCrisis }: CrisisModeProps) {
             intensity,
             location,
             symptoms: finalSymptoms,
-            exactTime,
-            endTime,
+            exactTime: `${startDate}T${exactTime}`,
+            endTime: endTime ? `${endDate}T${endTime}` : undefined,
             duration: calculatedDuration || undefined,
             medicationAttempts: medicationAttempts.length > 0 ? medicationAttempts : undefined
         };
@@ -171,6 +173,10 @@ export function CrisisMode({ onClose, onLogCrisis }: CrisisModeProps) {
         if (step === 7) {
             handleFinish();
         } else {
+            if (step === 3 && calculatedDuration !== null && calculatedDuration < 0) {
+                alert("La date de fin ne peut pas être antérieure à la date de début.");
+                return;
+            }
             setStep(step + 1);
         }
     };
@@ -264,35 +270,64 @@ export function CrisisMode({ onClose, onLogCrisis }: CrisisModeProps) {
                     <div className="space-y-6">
                         <h2 className="text-2xl font-bold text-center">Quand la crise a-t-elle commencé et fini ?</h2>
                         <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Heure de début</label>
-                                <input
-                                    type="time"
-                                    value={exactTime}
-                                    onChange={(e) => {
-                                        setExactTime(e.target.value);
-                                        if (endTime) {
-                                            const duration = calculateDuration(e.target.value, endTime);
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Date début</label>
+                                    <input
+                                        type="date"
+                                        value={startDate}
+                                        onChange={(e) => {
+                                            setStartDate(e.target.value);
+                                            const duration = calculateDuration(e.target.value, exactTime, endDate, endTime);
                                             setCalculatedDuration(duration);
-                                        }
-                                    }}
-                                    className="w-full p-3 text-lg border rounded-lg bg-background text-foreground"
-                                />
+                                        }}
+                                        className="w-full p-3 text-lg border rounded-lg bg-background text-foreground"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Heure début</label>
+                                    <input
+                                        type="time"
+                                        value={exactTime}
+                                        onChange={(e) => {
+                                            setExactTime(e.target.value);
+                                            const duration = calculateDuration(startDate, e.target.value, endDate, endTime);
+                                            setCalculatedDuration(duration);
+                                        }}
+                                        className="w-full p-3 text-lg border rounded-lg bg-background text-foreground"
+                                    />
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Heure de fin</label>
-                                <input
-                                    type="time"
-                                    value={endTime}
-                                    onChange={(e) => handleEndTimeChange(e.target.value)}
-                                    className="w-full p-3 text-lg border rounded-lg bg-background text-foreground"
-                                />
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Date fin</label>
+                                    <input
+                                        type="date"
+                                        value={endDate}
+                                        onChange={(e) => handleEndDateChange(e.target.value)}
+                                        className="w-full p-3 text-lg border rounded-lg bg-background text-foreground"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Heure fin</label>
+                                    <input
+                                        type="time"
+                                        value={endTime}
+                                        onChange={(e) => handleEndTimeChange(e.target.value)}
+                                        className="w-full p-3 text-lg border rounded-lg bg-background text-foreground"
+                                    />
+                                </div>
                             </div>
+
                             {calculatedDuration !== null && (
-                                <div className="p-4 bg-primary/10 rounded-lg">
+                                <div className={`p-4 rounded-lg ${calculatedDuration < 0 ? 'bg-destructive/10 text-destructive' : 'bg-primary/10'}`}>
                                     <p className="text-center font-semibold">
-                                        Durée calculée : {calculatedDuration} minutes
-                                        {calculatedDuration >= 60 && ` (${Math.floor(calculatedDuration / 60)}h${calculatedDuration % 60 > 0 ? ` ${calculatedDuration % 60}min` : ''})`}
+                                        {calculatedDuration < 0
+                                            ? "Erreur : La date de fin est antérieure au début"
+                                            : `Durée calculée : ${calculatedDuration} minutes
+                                               ${calculatedDuration >= 60 ? ` (${Math.floor(calculatedDuration / 60)}h${calculatedDuration % 60 > 0 ? ` ${calculatedDuration % 60}min` : ''})` : ''}`
+                                        }
                                     </p>
                                 </div>
                             )}

@@ -1,173 +1,72 @@
-# 🧠 Migraine Tracker AI
+# 🧠 MigraineChecker - Assistant Intelligent de Suivi des Migraines
 
-Une application web moderne et intelligente pour le suivi et l'analyse des migraines, développée avec Next.js et TypeScript.
+Application web moderne pour le suivi, l'analyse et la prédiction des crises de migraine, alimentée par l'IA et connectée à vos données de santé.
 
-![Next.js](https://img.shields.io/badge/Next.js-14.2.3-black?style=flat-square&logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)
-![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?style=flat-square&logo=tailwind-css)
+![Status](https://img.shields.io/badge/Status-Beta-blue)
+![Tech](https://img.shields.io/badge/Stack-Next.js_14-black)
 
-## ✨ Fonctionnalités
+## ✨ Fonctionnalités Principales
 
-### 📊 Suivi Détaillé des Crises
-- **Enregistrement complet** : Intensité, localisation, symptômes, durée
-- **Calcul automatique** : Durée calculée automatiquement à partir des heures de début et fin
-- **Gestion des crises nocturnes** : Support des crises qui traversent minuit
-- **Médicaments multiples** : Enregistrez plusieurs prises de médicaments par crise avec leur efficacité
+### 📊 Dashboard Intelligent
+- **Score de Risque en Temps Réel** : Analyse multi-factorielle (Météo, Sommeil, Stress, Activité).
+- **Prédictions IA** : Suggestions basées sur vos historiques et modèles détectés.
+- **Météo Intégrée** : Pression atmosphérique, humidité et température locales.
 
-### 🏃 Suivi d'Activité Sportive
-- **Types d'activités** : Course, Vélo, Natation, Musculation
-- **Détails précis** : Heure exacte, durée, intensité
-- **Calories brûlées** : Suivi optionnel des calories dépensées
+### 📝 Suivi Détaillé
+- **Mode SOS (Crise)** : Enregistrement rapide avec support des crises multi-jours (Date début/fin).
+- **Suivi des Traitements** : 
+  - Module dédié **Aimovig** (Injections mensuelles, rappels, compte à rebours).
+  - Suivi de l'efficacité des médicaments de crise.
+- **Activités & Facteurs** : Importation de données (Sport, Temps d'écran, Calories).
 
-### 🍽️ Suivi Calorique
-- **Rappel quotidien** : Widget intelligent pour ne jamais oublier
-- **Saisie flexible** : Total journalier ou détail par repas
-- **Analyse de corrélation** : Découvrez les liens entre alimentation et migraines
+### 🔗 Intégrations & Données
+- **Garmin & Strava** : Synchronisation automatique des données de santé (Sommeil, Stress, Body Battery, Sport).
+- **Supabase** : Stockage cloud sécurisé et synchronisé.
+- **Rapports Médicaux** : Génération de rapports PDF complets pour votre neurologue, incluant l'analyse "Avant/Après" traitement.
 
-### 📈 Analyses et Rapports Médicaux
-- **Tableaux de bord interactifs** : Visualisations avec Recharts
-- **Analyse avant/après traitement** : Évaluez l'efficacité d'Aimovig ou autres traitements préventifs
-- **Corrélations multiples** :
-  - Temps d'écran et migraines
-  - Activité sportive et déclencheurs
-  - Apport/dépense calorique et risque de crise
-  - Efficacité des médicaments
-- **Export professionnel** : PDF et Excel pour vos consultations médicales
+## 🛠️ Stack Technique
 
-### 🎯 Interface Utilisateur
-- **Actions rapides** : Deux boutons principaux pour un accès instantané
-- **Mode crise** : Workflow guidé étape par étape
-- **Design moderne** : Interface claire et intuitive avec Shadcn/UI
-- **Responsive** : Fonctionne sur tous les appareils
+- **Frontend** : Next.js 14 (App Router), React, TypeScript.
+- **UI/UX** : Tailwind CSS, Shadcn UI, Lucide Icons.
+- **Backend/Storage** : Supabase (PostgreSQL), LocalStorage (mode hors ligne).
+- **Analytics** : Chart.js, Recharts, TensorFlow.js (pour les prédictions locales).
+- **Connecteurs** : Scripts Python pour l'import Garmin/Strava.
 
-## 🚀 Installation
+## 🚀 Installation et Lancement
 
-### Prérequis
-- Node.js 18+ et npm
-- WSL2 (pour Windows) ou environnement Linux/macOS
+1. **Cloner le projet**
+   ```bash
+   git clone <url-du-repo>
+   cd migraine-tracker
+   ```
 
-### Installation Standard
+2. **Installer les dépendances**
+   ```bash
+   npm install
+   ```
 
-```bash
-# Cloner le repository
-git clone https://github.com/Proftg/migraine-tracker.git
-cd migraine-tracker
+3. **Configuration**
+   Créez un fichier `.env.local` avec vos clés API (Supabase, Garmin, etc.) :
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=votre_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=votre_cle
+   ```
 
-# Installer les dépendances
-npm install
+4. **Lancer en développement**
+   ```bash
+   npm run dev
+   ```
+   L'application sera accessible sur `http://localhost:3000` (ou 3002 selon config).
 
-# Lancer le serveur de développement
-npm run dev
-```
+5. **Lancer avec le script Windows**
+   Double-cliquez sur `Lancer_Migraine_Tracker.bat` pour démarrer l'environnement complet (WSL + Navigateur).
 
-L'application sera accessible sur [http://localhost:3000](http://localhost:3000)
+## 🔄 Mises à Jour Récentes
 
-### Installation Windows avec Lanceur
+- **Aimovig Tracking** : Ajout d'une carte de suivi des injections avec calcul automatique de la prochaine date.
+- **SOS Amélioré** : Support complet des dates et heures pour les crises longues (>24h).
+- **Correctifs Analytics** : Amélioration de la précision des calculs d'intensité moyenne.
 
-Pour une expérience optimale sous Windows avec WSL :
+## 📄 Licence
 
-1. Suivez les étapes d'installation standard ci-dessus
-2. Créez un raccourci du fichier `Lancer_Migraine_Tracker.bat` sur votre bureau
-3. Double-cliquez sur le raccourci pour lancer l'application automatiquement
-
-Le lanceur :
-- ✅ Vérifie WSL automatiquement
-- ✅ Démarre le serveur de développement
-- ✅ Ouvre votre navigateur sur l'application
-
-## 📦 Technologies Utilisées
-
-### Frontend
-- **Next.js 14** - Framework React avec App Router
-- **TypeScript** - Typage statique pour plus de robustesse
-- **TailwindCSS** - Styling utilitaire moderne
-- **Shadcn/UI** - Composants UI accessibles et personnalisables
-
-### Visualisation & Export
-- **Recharts** - Graphiques interactifs et responsives
-- **jsPDF** - Génération de rapports PDF
-- **xlsx** - Export Excel pour analyses externes
-
-### Utilitaires
-- **date-fns** - Manipulation de dates
-- **Lucide React** - Icônes modernes
-- **clsx & tailwind-merge** - Gestion des classes CSS
-
-## 🗂️ Structure du Projet
-
-```
-migraine-tracker/
-├── src/
-│   ├── app/                    # Pages Next.js (App Router)
-│   │   └── page.tsx           # Dashboard principal
-│   ├── components/
-│   │   ├── charts/            # Composants de visualisation
-│   │   │   ├── BeforeAfterChart.tsx
-│   │   │   ├── CalorieCorrelationChart.tsx
-│   │   │   ├── FrequencyTrendChart.tsx
-│   │   │   └── ...
-│   │   ├── migraine/          # Composants métier
-│   │   │   ├── CrisisMode.tsx
-│   │   │   ├── DailyCalorieReminder.tsx
-│   │   │   ├── MedicalReport.tsx
-│   │   │   ├── SportsQuickEntry.tsx
-│   │   │   └── ...
-│   │   └── ui/                # Composants UI de base (Shadcn)
-│   ├── lib/
-│   │   ├── analytics.ts       # Moteur d'analyse des données
-│   │   ├── storage.ts         # Gestion du localStorage
-│   │   └── exportService.ts   # Export PDF/Excel
-│   └── types/
-│       └── index.ts           # Définitions TypeScript
-├── public/                     # Assets statiques
-├── Lancer_Migraine_Tracker.bat # Lanceur Windows
-└── package.json
-```
-
-## 💾 Stockage des Données
-
-Les données sont stockées localement dans le navigateur via `localStorage`, garantissant :
-- ✅ **Confidentialité totale** : Vos données restent sur votre appareil
-- ✅ **Pas de serveur requis** : Fonctionne entièrement hors ligne
-- ✅ **Accès instantané** : Pas de latence réseau
-
-> ⚠️ **Important** : Pensez à exporter régulièrement vos données en PDF ou Excel pour éviter toute perte.
-
-## 🎨 Captures d'Écran
-
-<!-- TODO: Ajouter des captures d'écran -->
-
-## 🤝 Contribution
-
-Les contributions sont les bienvenues ! N'hésitez pas à :
-1. Fork le projet
-2. Créer une branche pour votre fonctionnalité (`git checkout -b feature/AmazingFeature`)
-3. Commit vos changements (`git commit -m 'Add some AmazingFeature'`)
-4. Push vers la branche (`git push origin feature/AmazingFeature`)
-5. Ouvrir une Pull Request
-
-## 📝 License
-
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
-
-## 👤 Auteur
-
-**Tahar** - [@Proftg](https://github.com/Proftg)
-
-## 🙏 Remerciements
-
-- [Shadcn/UI](https://ui.shadcn.com/) pour les composants UI
-- [Recharts](https://recharts.org/) pour les graphiques
-- [Lucide](https://lucide.dev/) pour les icônes
-- La communauté Next.js pour l'excellent framework
-
-## 📧 Support
-
-Pour toute question ou suggestion, n'hésitez pas à ouvrir une issue sur GitHub.
-
----
-
-<div align="center">
-Fait avec ❤️ pour aider à mieux comprendre et gérer les migraines
-</div>
+Projet personnel - Tous droits réservés.
