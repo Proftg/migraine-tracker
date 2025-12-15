@@ -10,8 +10,8 @@ export async function POST() {
         const projectDir = process.env.PROJECT_DIR || '/home/tahar/project/Maven/migraine-tracker';
         const scriptPath = path.join(projectDir, 'scripts', 'strava-sync.py');
 
-        // Activate venv and run script
-        const command = `cd ${projectDir} && source .venv/bin/activate && python3 ${scriptPath}`;
+        // Run script with python3
+        const command = `cd ${projectDir} && python3 ${scriptPath}`;
 
         console.log('Executing Strava sync command:', command);
 

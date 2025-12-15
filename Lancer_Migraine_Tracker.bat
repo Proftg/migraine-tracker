@@ -3,7 +3,7 @@ setlocal
 
 :: Configuration
 set "PROJECT_PATH=/home/tahar/project/Maven/migraine-tracker"
-set "APP_URL=http://localhost:3000"
+set "APP_URL=http://localhost:3002"
 
 title MigraineChecker Launcher
 color 0A
@@ -26,25 +26,24 @@ if %ERRORLEVEL% NEQ 0 (
 echo   [OK] WSL est pret
 echo.
 
-:: Ouverture du navigateur
-echo [Etape 2/3] Ouverture du navigateur...
-start "" "%APP_URL%"
-echo   [OK] Navigateur lance
-echo.
-
-:: Demarrage du serveur
-echo [Etape 3/3] Demarrage du serveur...
+:: Demarrage du serveur (en premier pour qu'il soit pret)
+echo [Etape 2/3] Demarrage du serveur...
 echo.
 echo ========================================================
 echo   SERVEUR EN COURS D'EXECUTION
 echo   
-echo   L'application est accessible sur: %APP_URL%
+echo   L'application sera accessible sur: %APP_URL%
+echo   (Le navigateur s'ouvrira dans 5 secondes)
 echo   
 echo   IMPORTANT: Ne fermez pas cette fenetre !
 echo ========================================================
 echo.
 
-wsl bash -l -c "cd %PROJECT_PATH% && npm run dev -- -p 3000"
+:: Lancer le navigateur en arriere-plan apres un delai
+start /b cmd /c "timeout /t 5 >nul && start "" "%APP_URL%""
+
+:: Execution du serveur
+wsl bash -l -c "cd %PROJECT_PATH% && npm run dev -- -p 3002"
 
 echo.
 echo Le serveur s'est arrete.

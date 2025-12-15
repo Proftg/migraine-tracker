@@ -28,6 +28,9 @@ dependencies:
   
   # Export Excel (pour Phase 2)  
   excel: ^4.0.3
+  
+  # HTTP Client pour sync Garmin/Strava
+  http: ^1.2.0
 
 dev_dependencies:
   flutter_test:

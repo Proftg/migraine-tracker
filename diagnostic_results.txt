@@ -1,0 +1,236 @@
+🚀 Garmin Endpoint Diagnostic Tool
+================================================================================
+✅ Logged in as: runner-tg
+
+📅 Testing dates:
+   Today: 2025-12-08
+   Yesterday: 2025-12-07
+   Week ago: 2025-12-01
+
+================================================================================
+🧪 Testing: User Summary (Daily)
+   Endpoint: /usersummary-service/usersummary/daily/runner-tg
+   Params: {'calendarDate': '2025-12-07'}
+================================================================================
+✅ SUCCESS!
+📊 Response type: <class 'dict'>
+📊 Keys available: ['userProfileId', 'totalKilocalories', 'activeKilocalories', 'bmrKilocalories', 'wellnessKilocalories', 'burnedKilocalories', 'consumedKilocalories', 'remainingKilocalories', 'totalSteps', 'netCalorieGoal']
+
+📄 Sample data:
+{
+  "userProfileId": 5077949,
+  "totalKilocalories": 2106.0,
+  "activeKilocalories": 224.0,
+  "bmrKilocalories": 1882.0,
+  "wellnessKilocalories": 2106.0,
+  "burnedKilocalories": null,
+  "consumedKilocalories": null,
+  "remainingKilocalories": null,
+  "totalSteps": 2931,
+  "netCalorieGoal": null,
+  "totalDistanceMeters": 2360,
+  "wellnessDistanceMeters": 2360,
+  "wellnessActiveKilocalories": 224.0,
+  "netRemainingKilocalories": 224.0,
+  "userDailySummaryId": 5077949,
+  "calendarDate": "2025-12-0
+
+================================================================================
+🧪 Testing: Sleep Data (Daily)
+   Endpoint: /wellness-service/wellness/dailySleepData/runner-tg
+   Params: {'date': '2025-12-07'}
+================================================================================
+✅ SUCCESS!
+📊 Response type: <class 'dict'>
+📊 Keys available: ['dailySleepDTO', 'sleepMovement', 'remSleepData', 'sleepLevels', 'sleepRestlessMoments', 'restlessMomentsCount', 'wellnessEpochRespirationDataDTOList', 'wellnessEpochRespirationAveragesList', 'respirationVersion', 'sleepHeartRate']
+
+📄 Sample data:
+{
+  "dailySleepDTO": {
+    "id": 1765064391000,
+    "userProfilePK": 5077949,
+    "calendarDate": "2025-12-07",
+    "sleepTimeSeconds": 18180,
+    "napTimeSeconds": 0,
+    "sleepWindowConfirmed": true,
+    "sleepWindowConfirmationType": "enhanced_confirmed_final",
+    "sleepStartTimestampGMT": 1765064391000,
+    "sleepEndTimestampGMT": 1765082631000,
+    "sleepStartTimestampLocal": 1765067991000,
+    "sleepEndTimestampLocal": 1765086231000,
+    "autoSleepStartTimestampGMT": null,
+    "autoSleepE
+
+================================================================================
+🧪 Testing: Stress Data (Daily) - Format 1
+   Endpoint: /wellness-service/wellness/dailyStress/2025-12-07
+================================================================================
+✅ SUCCESS!
+📊 Response type: <class 'dict'>
+📊 Keys available: ['userProfilePK', 'calendarDate', 'startTimestampGMT', 'endTimestampGMT', 'startTimestampLocal', 'endTimestampLocal', 'maxStressLevel', 'avgStressLevel', 'stressChartValueOffset', 'stressChartYAxisOrigin']
+
+📄 Sample data:
+{
+  "userProfilePK": 5077949,
+  "calendarDate": "2025-12-07",
+  "startTimestampGMT": "2025-12-06T23:00:00.0",
+  "endTimestampGMT": "2025-12-07T23:00:00.0",
+  "startTimestampLocal": "2025-12-07T00:00:00.0",
+  "endTimestampLocal": "2025-12-08T00:00:00.0",
+  "maxStressLevel": 90,
+  "avgStressLevel": 19,
+  "stressChartValueOffset": 1,
+  "stressChartYAxisOrigin": -1,
+  "stressValueDescriptorsDTOList": [
+    {
+      "key": "timestamp",
+      "index": 0
+    },
+    {
+      "key": "stressLevel",
+      "i
+
+================================================================================
+🧪 Testing: Stress Data (Daily) - Format 2
+   Endpoint: /wellness-service/wellness/dailyStress/runner-tg
+   Params: {'calendarDate': '2025-12-07'}
+================================================================================
+❌ FAILED: Error in request: 404 Client Error: Not Found for url: https://connectapi.garmin.com/wellness-service/wellness/dailyStress/runner-tg?calendarDate=2025-12-07
+
+================================================================================
+🧪 Testing: Body Battery - Format 1
+   Endpoint: /wellness-service/wellness/bodyBattery/2025-12-07
+================================================================================
+❌ FAILED: Error in request: 404 Client Error: Not Found for url: https://connectapi.garmin.com/wellness-service/wellness/bodyBattery/2025-12-07
+
+================================================================================
+🧪 Testing: Body Battery - Format 2
+   Endpoint: /wellness-service/wellness/bodyBattery
+   Params: {'startDate': '2025-12-07', 'endDate': '2025-12-07'}
+================================================================================
+❌ FAILED: Error in request: 404 Client Error: Not Found for url: https://connectapi.garmin.com/wellness-service/wellness/bodyBattery?startDate=2025-12-07&endDate=2025-12-07
+
+================================================================================
+🧪 Testing: Body Battery - Format 3
+   Endpoint: /wellness-service/wellness/bodyBattery/runner-tg
+   Params: {'date': '2025-12-07'}
+================================================================================
+❌ FAILED: Error in request: 404 Client Error: Not Found for url: https://connectapi.garmin.com/wellness-service/wellness/bodyBattery/runner-tg?date=2025-12-07
+
+================================================================================
+🧪 Testing: Heart Rate (Daily)
+   Endpoint: /wellness-service/wellness/dailyHeartRate/runner-tg
+   Params: {'date': '2025-12-07'}
+================================================================================
+✅ SUCCESS!
+📊 Response type: <class 'dict'>
+📊 Keys available: ['userProfilePK', 'calendarDate', 'startTimestampGMT', 'endTimestampGMT', 'startTimestampLocal', 'endTimestampLocal', 'maxHeartRate', 'minHeartRate', 'restingHeartRate', 'lastSevenDaysAvgRestingHeartRate']
+
+📄 Sample data:
+{
+  "userProfilePK": 5077949,
+  "calendarDate": "2025-12-07",
+  "startTimestampGMT": "2025-12-06T23:00:00.0",
+  "endTimestampGMT": "2025-12-07T23:00:00.0",
+  "startTimestampLocal": "2025-12-07T00:00:00.0",
+  "endTimestampLocal": "2025-12-08T00:00:00.0",
+  "maxHeartRate": 133,
+  "minHeartRate": 41,
+  "restingHeartRate": 44,
+  "lastSevenDaysAvgRestingHeartRate": 47,
+  "heartRateValueDescriptors": [
+    {
+      "key": "timestamp",
+      "index": 0
+    },
+    {
+      "key": "heartrate",
+      "index
+
+================================================================================
+🧪 Testing: Recent Activities
+   Endpoint: /activitylist-service/activities/search/activities
+   Params: {'start': 0, 'limit': 10}
+================================================================================
+✅ SUCCESS!
+📊 Response type: <class 'list'>
+📊 List length: 10
+📊 First item keys: ['activityId', 'activityName', 'startTimeLocal', 'startTimeGMT', 'activityType', 'eventType', 'distance', 'duration', 'elapsedDuration', 'movingDuration', 'averageSpeed', 'hasPolyline', 'hasImages', 'ownerId', 'ownerDisplayName', 'ownerFullName', 'ownerProfileImageUrlSmall', 'ownerProfileImageUrlMedium', 'ownerProfileImageUrlLarge', 'calories', 'bmrCalories', 'averageHR', 'maxHR', 'steps', 'userRoles', 'privacy', 'userPro', 'hasVideo', 'timeZoneId', 'beginTimestamp', 'sportTypeId', 'aerobicTrainingEffect', 'anaerobicTrainingEffect', 'deviceId', 'summarizedExerciseSets', 'summarizedDiveInfo', 'manufacturer', 'lapCount', 'waterEstimated', 'totalSets', 'activeSets', 'totalReps', 'trainingEffectLabel', 'activityTrainingLoad', 'minActivityLapDuration', 'aerobicTrainingEffectMessage', 'anaerobicTrainingEffectMessage', 'splitSummaries', 'hasSplits', 'moderateIntensityMinutes', 'vigorousIntensityMinutes', 'differenceBodyBattery', 'hasHeatMap', 'hrTimeInZone_1', 'hrTimeInZone_2', 'hrTimeInZone_3', 'hrTimeInZone_4', 'hrTimeInZone_5', 'endTimeGMT', 'qualifyingDive', 'parent', 'purposeful', 'manualActivity', 'decoDive', 'autoCalcCalories', 'elevationCorrected', 'atpActivity', 'favorite', 'pr']
+
+📄 Sample data:
+[
+  {
+    "activityId": 21199865209,
+    "activityName": "Musculation",
+    "startTimeLocal": "2025-12-08 08:58:51",
+    "startTimeGMT": "2025-12-08 07:58:51",
+    "activityType": {
+      "typeId": 13,
+      "typeKey": "strength_training",
+      "parentTypeId": 29,
+      "isHidden": false,
+      "restricted": false,
+      "trimmable": false
+    },
+    "eventType": {
+      "typeId": 9,
+      "typeKey": "uncategorized",
+      "sortOrder": 10
+    },
+    "distance": 0.0,
+    "duration": 7207.8188476
+
+================================================================================
+🧪 Testing: Hydration (Daily)
+   Endpoint: /wellness-service/wellness/dailyHydration/2025-12-07
+================================================================================
+❌ FAILED: Error in request: 404 Client Error: Not Found for url: https://connectapi.garmin.com/wellness-service/wellness/dailyHydration/2025-12-07
+
+================================================================================
+🧪 Testing: Respiration (Daily)
+   Endpoint: /wellness-service/wellness/dailyRespiration/2025-12-07
+================================================================================
+❌ FAILED: Error in request: 404 Client Error: Not Found for url: https://connectapi.garmin.com/wellness-service/wellness/dailyRespiration/2025-12-07
+
+================================================================================
+🧪 Testing: Steps (Daily)
+   Endpoint: /wellness-service/wellness/dailySteps/2025-12-07
+================================================================================
+❌ FAILED: Error in request: 404 Client Error: Not Found for url: https://connectapi.garmin.com/wellness-service/wellness/dailySteps/2025-12-07
+
+================================================================================
+🧪 Testing: Pulse Ox / SpO2
+   Endpoint: /wellness-service/wellness/dailySpo2/runner-tg
+   Params: {'date': '2025-12-07'}
+================================================================================
+❌ FAILED: Error in request: 404 Client Error: Not Found for url: https://connectapi.garmin.com/wellness-service/wellness/dailySpo2/runner-tg?date=2025-12-07
+
+
+================================================================================
+📊 DIAGNOSTIC SUMMARY
+================================================================================
+✅ Successful endpoints: 5/13
+❌ Failed endpoints: 8/13
+
+✅ Working Endpoints:
+   - User Summary (Daily)
+   - Sleep Data (Daily)
+   - Stress Data (Daily) - Format 1
+   - Heart Rate (Daily)
+   - Recent Activities
+
+❌ Failed Endpoints:
+   - Stress Data (Daily) - Format 2
+   - Body Battery - Format 1
+   - Body Battery - Format 2
+   - Body Battery - Format 3
+   - Hydration (Daily)
+   - Respiration (Daily)
+   - Steps (Daily)
+   - Pulse Ox / SpO2
+
+================================================================================
+💡 Recommendation:
+   Update garmin-sync.py to use only the successful endpoints listed above.
+================================================================================
+

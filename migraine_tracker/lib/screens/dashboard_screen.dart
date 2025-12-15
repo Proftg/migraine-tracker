@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../models/migraine_attack.dart';
 import '../services/database_service.dart';
 import 'add_attack_screen.dart';
+import 'health_data_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -101,21 +102,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AddAttackScreen(),
-            ),
-          );
-          if (result == true) {
-            _loadData(); // Refresh data after adding attack
-          }
-        },
-        backgroundColor: const Color(0xFF4F46E5),
-        icon: const Icon(Icons.add),
-        label: const Text('ENREGISTRER UNE CRISE'),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton(
+            heroTag: 'health',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const HealthDataScreen(),
+                ),
+              );
+            },
+            backgroundColor: const Color(0xFF10B981),
+            child: const Icon(Icons.favorite),
+          ),
+          const SizedBox(height: 12),
+          FloatingActionButton.extended(
+            heroTag: 'add',
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AddAttackScreen(),
+                ),
+              );
+              if (result == true) {
+                _loadData();
+              }
+            },
+            backgroundColor: const Color(0xFF4F46E5),
+            icon: const Icon(Icons.add),
+            label: const Text('ENREGISTRER UNE CRISE'),
+          ),
+        ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );

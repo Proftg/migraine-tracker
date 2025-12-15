@@ -1,0 +1,41 @@
+🚀 Starting Garmin Sync (Fixed Version)...
+✅ Using saved Garmin session
+👤 Syncing for user: runner-tg
+📅 Fetching data for last 30 days (up to 2025-12-08)
+❌ Error syncing 2025-12-08: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-12-07: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-12-06: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-12-05: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-12-04: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-12-03: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-12-02: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-12-01: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-30: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-29: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-28: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-27: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-26: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-25: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-24: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-23: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-22: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-21: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-20: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-19: {'message': "Could not find the 'calories_active' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-18: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-17: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-16: {'message': "Could not find the 'calories_active' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-15: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-14: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-13: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-12: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-11: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-10: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+❌ Error syncing 2025-11-09: {'message': "Could not find the 'avg_hr_7days' column of 'garmin_metrics' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+
+================================================================================
+🎉 Sync complete!
+✅ Successfully synced: 0 days
+❌ Errors encountered: 30 days
+================================================================================
+
