@@ -109,6 +109,95 @@ export const analytics = {
         };
     },
 
+    // Location Analysis for Medical Mapping
+    getLocationAnalysis: (entries: Array<JournalEntry | MigraineEntry>) => {
+        const migraines = entries.filter(e => e.type === 'migraine') as MigraineEntry[];
+        const locationStats: Record<string, { count: number, totalIntensity: number }> = {};
+
+        migraines.forEach(m => {
+            const searchable = `${m.painLocation || ''} ${m.notes || ''}`.toLowerCase();
+
+            // Fuzzy mapping logic to ensure consistency with SVG IDs
+            let matchedZones = new Set<string>();
+
+            if (searchable.includes('toute la tête') || searchable.includes('global') || searchable.includes('partout') || searchable.includes('sommet') || searchable.includes('vertex')) {
+                ['Front gauche', 'Front droit', 'Tempe gauche', 'Tempe droite', 'Arrière gauche', 'Arrière droit', 'Toute la tête'].forEach(z => matchedZones.add(z));
+            } else {
+                if (searchable.includes('front') || searchable.includes('œil') || searchable.includes('orbit')) {
+                    if (searchable.includes('gauch')) matchedZones.add('Front gauche');
+                    if (searchable.includes('droit')) matchedZones.add('Front droit');
+                    if (!searchable.includes('gauch') && !searchable.includes('droit')) {
+                        matchedZones.add('Front gauche'); matchedZones.add('Front droit');
+                    }
+                }
+
+                if (searchable.includes('temp')) {
+                    if (searchable.includes('gauch')) matchedZones.add('Tempe gauche');
+                    if (searchable.includes('droit')) matchedZones.add('Tempe droite');
+                    if (!searchable.includes('gauch') && !searchable.includes('droit')) {
+                        matchedZones.add('Tempe gauche'); matchedZones.add('Tempe droite');
+                    }
+                }
+
+                if (searchable.includes('arrière') || searchable.includes('occipital') || searchable.includes('derrière')) {
+                    if (searchable.includes('gauch')) matchedZones.add('Arrière gauche');
+                    if (searchable.includes('droit')) matchedZones.add('Arrière droit');
+                    if (!searchable.includes('gauch') && !searchable.includes('droit')) {
+                        matchedZones.add('Arrière gauche'); matchedZones.add('Arrière droit');
+                    }
+                }
+
+                if (searchable.includes('nuque') || searchable.includes('cou')) matchedZones.add('Nuque');
+
+                // Hemicrania support
+                if (searchable.includes('hémi') || searchable.includes('hemi')) {
+                    if (searchable.includes('droit')) {
+                        matchedZones.add('Front droit'); matchedZones.add('Tempe droite'); matchedZones.add('Arrière droit');
+                    }
+                    if (searchable.includes('gauch')) {
+                        matchedZones.add('Front gauche'); matchedZones.add('Tempe gauche'); matchedZones.add('Arrière gauche');
+                    }
+                }
+
+                // Generic side fallback
+                if (matchedZones.size === 0) {
+                    if (searchable.includes('droit')) {
+                        matchedZones.add('Front droit');
+                        matchedZones.add('Tempe droite');
+                    }
+                    if (searchable.includes('gauch')) {
+                        matchedZones.add('Front gauche');
+                        matchedZones.add('Tempe gauche');
+                    }
+                }
+
+                // ULTIMATE FALLBACK: Ensure all migraines are visible
+                if (matchedZones.size === 0) {
+                    matchedZones.add('Toute la tête');
+                }
+            }
+
+            // Normalization
+            Array.from(matchedZones).forEach(z => {
+                let targetLoc = z;
+                if (z === 'Tempe droit') targetLoc = 'Tempe droite';
+                if (z === 'Arrière droit') targetLoc = 'Arrière droite';
+
+                if (!locationStats[targetLoc]) {
+                    locationStats[targetLoc] = { count: 0, totalIntensity: 0 };
+                }
+                locationStats[targetLoc].count += 1;
+                locationStats[targetLoc].totalIntensity += Number(m.intensity || 0);
+            });
+        });
+
+        return Object.entries(locationStats).map(([location, stats]) => ({
+            location,
+            count: stats.count,
+            avgIntensity: stats.totalIntensity / stats.count
+        }));
+    },
+
     // Frequency Analysis
     getFrequencyByPeriod: (entries: JournalEntry[], period: 'day' | 'week' | 'month', dateRange?: { start: Date; end: Date }) => {
         let migraines = entries.filter(e => e.type === 'migraine') as MigraineEntry[];
@@ -529,7 +618,9 @@ export const analytics = {
             afterTreatment: afterStats,
             improvement,
             treatmentStartDate: firstTreatment.date,
-            daysOnTreatment: daysAfterTreatment
+            daysOnTreatment: daysAfterTreatment,
+            locationStatsBefore: analytics.getLocationAnalysis(before as any),
+            locationStatsAfter: analytics.getLocationAnalysis(after as any)
         };
     },
 
@@ -758,6 +849,86 @@ export const analytics = {
             avgScoreOnNormalDays,
             totalActivities: activities.length,
             activitiesWithSufferScore: activities.filter(a => a.sufferScore).length
+        };
+    },
+
+    // Intelligent Trigger Analysis (AI Model)
+    getPotentialTriggers: (entries: JournalEntry[]) => {
+        const migraines = entries.filter(e => e.type === 'migraine') as MigraineEntry[];
+        const totalMigraines = migraines.length;
+        if (totalMigraines === 0) return null;
+
+        // 1. Weather Sensitivity (Pressure Changes)
+        const pressureEntries = entries.filter(e => e.weather?.pressure);
+        let pressureSensitivity = 'Inconnu';
+        let pressureRisk = 0;
+
+        if (pressureEntries.length > 0) {
+            const lowPressureMigraines = migraines.filter(m => m.weather?.pressure && m.weather.pressure < 1010).length;
+            const highPressureMigraines = migraines.filter(m => m.weather?.pressure && m.weather.pressure > 1020).length;
+
+            // Calculate relative risk (simplified)
+            const lowRisk = (lowPressureMigraines / totalMigraines) * 100;
+            const highRisk = (highPressureMigraines / totalMigraines) * 100;
+
+            if (lowRisk > 40) {
+                pressureSensitivity = 'Sensible basse pression (<1010 hPa)';
+                pressureRisk = lowRisk;
+            } else if (highRisk > 40) {
+                pressureSensitivity = 'Sensible haute pression (>1020 hPa)';
+                pressureRisk = highRisk;
+            } else {
+                pressureSensitivity = 'Pas de corrélation significative';
+                pressureRisk = Math.max(lowRisk, highRisk);
+            }
+        }
+
+        // 2. Weekend Effect (Let-down headache)
+        const weekendCount = migraines.filter(m => {
+            const day = new Date(m.date).getDay();
+            return day === 0 || day === 6;
+        }).length;
+        const weekendRisk = (weekendCount / totalMigraines) * 100;
+
+        // 3. Circadian Analysis (Morning vs Evening)
+        const morningCount = migraines.filter(m => {
+            const hour = new Date(m.date).getHours();
+            return hour >= 4 && hour < 11;
+        }).length;
+        const morningRisk = (morningCount / totalMigraines) * 100;
+
+        // 4. Keyword Mining in Notes & Triggers
+        const commonTriggers = ['Stress', 'Sommeil', 'Alcool', 'Règles', 'Écran', 'Sport', 'Alimentation'];
+        const detectedTriggers = commonTriggers.map(trigger => {
+            const count = migraines.filter(m =>
+                (m.notes?.toLowerCase().includes(trigger.toLowerCase())) ||
+                (m.triggers?.some(t => t.toLowerCase().includes(trigger.toLowerCase())))
+            ).length;
+            return {
+                name: trigger,
+                count,
+                probability: (count / totalMigraines) * 100
+            };
+        }).sort((a, b) => b.probability - a.probability);
+
+        // 5. Generate Insights
+        const topTriggers = detectedTriggers.filter(t => t.probability > 20);
+
+        return {
+            weatherFactor: {
+                sensitivity: pressureSensitivity,
+                riskLevel: pressureRisk
+            },
+            timeFactor: {
+                isWeekendSensitive: weekendRisk > 40,
+                isMorningSensitive: morningRisk > 50,
+                weekendRisk,
+                morningRisk
+            },
+            identifiedTriggers: topTriggers,
+            recommendation: topTriggers.length > 0
+                ? `Attention particulière requise pour : ${topTriggers[0].name} (${topTriggers[0].probability.toFixed(0)}% de corrélation)`
+                : "Pas de déclencheur majeur identifié. Continuez à détailler vos notes."
         };
     },
 
