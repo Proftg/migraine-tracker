@@ -6,21 +6,44 @@ const USE_SUPABASE = true; // Set to false to use localStorage only
 
 export const storage = {
     getEntries: async (): Promise<JournalEntry[]> => {
+        // 1. Load Local Data
+        let localEntries: JournalEntry[] = [];
+        if (typeof window !== 'undefined') {
+            const localData = localStorage.getItem(STORAGE_KEY);
+            localEntries = localData ? JSON.parse(localData) : [];
+        }
+
+        // 2. Load Remote Data (if enabled)
+        let remoteEntries: JournalEntry[] = [];
         if (USE_SUPABASE) {
             try {
-                return await supabaseStorage.getEntries();
+                remoteEntries = await supabaseStorage.getEntries();
             } catch (error) {
                 console.error('Supabase error, falling back to localStorage:', error);
-                // Fallback to localStorage if Supabase fails
-                if (typeof window === 'undefined') return [];
-                const data = localStorage.getItem(STORAGE_KEY);
-                return data ? JSON.parse(data) : [];
+                return localEntries;
             }
         } else {
-            if (typeof window === 'undefined') return [];
-            const data = localStorage.getItem(STORAGE_KEY);
-            return data ? JSON.parse(data) : [];
+            return localEntries;
         }
+
+        // 3. Merge Strategies: Union of both (Remote + Local)
+        // If an entry is in both, prefer Remote (usually newer/synced).
+        // If an entry is only in Local (sync failed), keep it.
+        // If an entry is only in Remote (cleared local), keep it.
+        const combined = new Map<string, JournalEntry>();
+
+        remoteEntries.forEach(e => combined.set(e.id, e));
+
+        localEntries.forEach(e => {
+            if (!combined.has(e.id)) {
+                combined.set(e.id, e);
+            }
+        });
+
+        // 4. Return sorted result
+        return Array.from(combined.values()).sort((a, b) =>
+            new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
     },
 
     addEntry: async (entry: JournalEntry): Promise<JournalEntry[]> => {

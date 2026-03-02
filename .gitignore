@@ -50,3 +50,10 @@ garmin-data/
 .garmin/
 logs/
 .env.strava
+
+# Python
+.venv/
+venv/
+mon_venv/
+__pycache__/
+*.pyc

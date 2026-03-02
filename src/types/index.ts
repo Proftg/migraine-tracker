@@ -45,6 +45,7 @@ export interface MigraineEntry extends BaseEntry {
     screenTimeBeforeCrisis?: number;  // Hours of screen time before crisis
     hadBreaks?: boolean;               // Regular breaks during screen time
     stressLevel?: number;              // 1-10 scale
+    triggers?: string[];               // User reported triggers or AI detected tags
 }
 
 export interface ActivityEntry extends BaseEntry {
